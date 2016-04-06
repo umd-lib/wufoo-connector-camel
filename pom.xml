@@ -16,6 +16,7 @@
     <camel.version>2.15.1</camel.version>
     <slf4j.version>1.7.10</slf4j.version>
     <log4j.version>1.2.17</log4j.version>
+    <spring.version>3.2.2.RELEASE</spring.version>
   </properties>
 
   <dependencies>
@@ -48,6 +49,64 @@
       <version>${camel.version}</version>
       <scope>test</scope>
     </dependency>
+    
+     <dependency>
+      <groupId>org.apache.camel</groupId>
+      <artifactId>camel-jetty</artifactId>
+      <version>${camel.version}</version>
+    <!-- use the same version as your Camel core version -->
+     </dependency>
+    
+    <dependency>
+      <groupId>org.json</groupId>
+      <artifactId>json</artifactId>
+      <version>20090211</version>
+	</dependency>
+	
+	<!-- Spring -->
+	<dependency>
+		<groupId>org.springframework</groupId>
+		<artifactId>spring-core</artifactId>
+		<version>${spring.version}</version>
+	</dependency>
+	<dependency>
+		<groupId>org.springframework</groupId>
+		<artifactId>spring-beans</artifactId>
+		<version>${spring.version}</version>
+	</dependency>
+	<dependency>
+		<groupId>org.springframework</groupId>
+		<artifactId>spring-aop</artifactId>
+		<version>${spring.version}</version>
+	</dependency>
+	<dependency>
+		<groupId>org.springframework</groupId>
+		<artifactId>spring-test</artifactId>
+		<version>${spring.version}</version>
+	</dependency>
+	<dependency>
+		<groupId>org.springframework</groupId>
+		<artifactId>spring-context-support</artifactId>
+		<version>${spring.version}</version>
+	</dependency>
+	
+	<dependency>
+		<groupId>org.apache.camel</groupId>
+		<artifactId>camel-spring</artifactId>
+		<version>${camel.version}</version>
+	</dependency>
+	<dependency>
+		<groupId>org.apache.camel</groupId>
+		<artifactId>camel-http</artifactId>
+		<version>${camel.version}</version>
+	</dependency>
+	
+	<dependency>
+		<groupId>org.apache.camel</groupId>
+		<artifactId>camel-spring-javaconfig</artifactId>
+		<version>${camel.version}</version>
+	</dependency>
+    
   </dependencies>
 
   <build>
@@ -63,6 +122,7 @@
           <target>1.7</target>
         </configuration>
       </plugin>
+     
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-resources-plugin</artifactId>
@@ -102,7 +162,7 @@
         <artifactId>exec-maven-plugin</artifactId>
         <version>1.2.1</version>
         <configuration>
-            <mainClass>edu.umd.lib.MainApp</mainClass>
+            <mainClass>edu.umd.lib.ServicesApp0</mainClass>
             <includePluginDependencies>false</includePluginDependencies>
         </configuration>
       </plugin>

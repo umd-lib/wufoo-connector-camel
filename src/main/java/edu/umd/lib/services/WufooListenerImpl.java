@@ -13,7 +13,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class WofooListenerImpl {
+public class WufooListenerImpl {
 
   /*********************************************
    * process the request and parses the field names and field values.

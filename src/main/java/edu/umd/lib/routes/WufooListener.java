@@ -3,19 +3,19 @@ package edu.umd.lib.routes;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 
-import edu.umd.lib.services.WofooListenerImpl;
+import edu.umd.lib.services.WufooListenerImpl;
 
-public class WofooListener extends AbstractRoute {
+public class WufooListener extends AbstractRoute {
 
   /**
    * Initializes a new instance of this class which defines a Camel route which
    * listens for incoming service invocations.
    */
-  public WofooListener() {
+  public WufooListener() {
     // sets the name of this bean
-    this.setName("wofoo");
+    this.setName("wufoo");
     // defines the service-name as set in the properties file
-    this.setServiceName("wofoo-listener");
+    this.setServiceName("wufoo-listener");
 
   }
 
@@ -25,8 +25,8 @@ public class WofooListener extends AbstractRoute {
         new Processor() {
           @Override
           public void process(Exchange exchange) throws Exception {
-            WofooListenerImpl wofooProcessor = new WofooListenerImpl();
-            wofooProcessor.processRequest(exchange);
+            WufooListenerImpl wufooProcessor = new WufooListenerImpl();
+            wufooProcessor.processRequest(exchange);
           }
         });
   }

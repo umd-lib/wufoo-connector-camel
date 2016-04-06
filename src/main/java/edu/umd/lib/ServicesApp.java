@@ -2,7 +2,7 @@ package edu.umd.lib;
 
 import org.apache.camel.main.Main;
 
-import edu.umd.lib.routes.WofooListener;
+import edu.umd.lib.routes.WufooListener;
 
 public class ServicesApp {
 
@@ -19,7 +19,7 @@ public class ServicesApp {
     Main app = new Main();
     // enable the shutdown hook
     app.enableHangupSupport();
-    app.addRouteBuilder(new WofooListener());
+    app.addRouteBuilder(new WufooListener());
     // do .run() instead of .start()
     app.run();
   }

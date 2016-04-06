@@ -162,7 +162,7 @@
         <artifactId>exec-maven-plugin</artifactId>
         <version>1.2.1</version>
         <configuration>
-            <mainClass>edu.umd.lib.ServicesApp0</mainClass>
+            <mainClass>edu.umd.lib.ServicesApp</mainClass>
             <includePluginDependencies>false</includePluginDependencies>
         </configuration>
       </plugin>

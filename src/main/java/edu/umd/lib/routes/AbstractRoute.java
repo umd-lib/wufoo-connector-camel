@@ -6,9 +6,13 @@ import org.springframework.core.env.Environment;
 public abstract class AbstractRoute extends RouteBuilder {
 
   /**
+   * The domain of this route
+   */
+  private String domain = "http://localhost:8080/";
+  /**
    * The name of this route
    */
-  private String name = "RoutName";
+  private String name = "RouteName";
   /**
    * The endpoint exposed by Camel
    */
@@ -26,7 +30,7 @@ public abstract class AbstractRoute extends RouteBuilder {
   }
 
   private void createEndPoint() {
-    this.endpoint = this.name + this.serviceName;
+    this.endpoint = this.domain + this.name + "/" + this.serviceName;
   }
 
   /**
@@ -36,6 +40,26 @@ public abstract class AbstractRoute extends RouteBuilder {
    *           All thrown exceptions while executing the route
    */
   protected abstract void defineRoute() throws Exception;
+
+  /**
+   * Returns a String representation of the domain Camel should handle for this
+   * route.
+   *
+   * @return The domain definition for this route
+   */
+  public String getDomain() {
+    return this.domain;
+  }
+
+  /**
+   * Sets the name of the route
+   *
+   * @param name
+   *          The domain for this route
+   */
+  public void setDomain(String domain) {
+    this.domain = domain;
+  }
 
   /**
    * Returns a String representation of the endpoint Camel should handle for

@@ -28,8 +28,8 @@ public class SysAidConnector {
   private static Logger log = Logger.getLogger(SysAidConnector.class);
 
   private String sysaid_URL = "https://libticketingdev.umd.edu/api/v1/";
-  private String sysaid_Username = "rameshb";
-  private String sysaid_Password = "abc12345";
+  private String sysaid_Username = "*******";
+  private String sysaid_Password = "*******";
   private String session_id;
 
   public String getSysaid_URL() {

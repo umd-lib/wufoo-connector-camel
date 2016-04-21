@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -27,10 +28,13 @@ public class SysAidConnector {
 
   private static Logger log = Logger.getLogger(SysAidConnector.class);
 
+  /*** Read from properties file ***/
   private String sysaid_URL = "https://libticketingdev.umd.edu/api/v1/";
   private String sysaid_Username = "*******";
   private String sysaid_Password = "*******";
   private String session_id;
+
+  private HashMap<String, HashMap<String, String>> dropdownList = new HashMap<String, HashMap<String, String>>();
 
   public String getSysaid_URL() {
     return sysaid_URL;
@@ -241,6 +245,7 @@ public class SysAidConnector {
    * request
    ***/
   public HttpResponse getRequest(String endpoint) {
+
     try {
 
       HttpGet httpget = new HttpGet(endpoint);
@@ -276,14 +281,30 @@ public class SysAidConnector {
 
   /***
    * Get all List SysAid API and store for further processing
+   *
+   * @throws JSONException
    */
-  public void getAllList() {
+  public void getAllList() throws JSONException {
     HttpResponse response = this.getRequest(this.sysaid_URL + "list");
     HttpEntity entity = response.getEntity();
     String responseString;
     try {
       responseString = EntityUtils.toString(entity, "UTF-8");
-      log.info("Response" + responseString);
+      JSONArray list_response = new JSONArray(responseString);
+
+      for (int i = 0; i < list_response.length(); i++) {
+
+        JSONObject list = list_response.getJSONObject(i);
+        JSONArray values = (JSONArray) list.get("values");
+
+        HashMap<String, String> list_map = new HashMap<String, String>();
+        for (int j = 0; j < values.length(); j++) {
+          JSONObject value = values.getJSONObject(j);
+          list_map.put(value.getString("caption"), value.getString("id"));
+        }
+        dropdownList.put(list.getString("id"), list_map);
+      }
+      log.info("Map >>>: " + dropdownList.size());
     } catch (ParseException e) {
       log.error("ParseException occured while attempting to "
           + "execute POST request.", e);
@@ -322,10 +343,57 @@ public class SysAidConnector {
    */
   public static void main(String args[]) {
 
-    SysAidConnector sysaid = new SysAidConnector();
-    sysaid.createServiceRequest();
-    // sysaid.getAllList();
+    try {
+      SysAidConnector sysaid = new SysAidConnector();
+      sysaid.getAllList();
+      // sysaid.createServiceRequest();
 
+      log.info(sysaid.getDropdownValues("responsibility", "Ben Wallberg"));
+    } catch (JSONException e) {
+      log.error("JSONException occured while attempting to "
+          + "execute POST request.", e);
+    }
+
+  }
+
+  /**
+   * Method to print values in hash map for debugging
+   *
+   * @param parameters
+   */
+  @SuppressWarnings("unchecked")
+  public void printingMap(Map<String, ?> parameters) {
+
+    log.info("Printing");
+    for (Map.Entry<String, ?> entry : parameters.entrySet()) {
+      if (entry.getValue() instanceof List<?>) {
+        String value = "";
+        for (int i = 0; i < ((Map<String, List<String>>) entry.getValue()).size(); i++) {
+          value = value + ((List<String>) entry.getValue()).get(i);
+        }
+        log.info(entry.getKey() + ":" + value);
+      } else {
+        log.info(entry.getKey() + ":" + entry.getValue());
+      }
+
+    }
+  }
+
+  /**
+   * Search the Hash map for a particular key under a list
+   *
+   * @param parameters
+   */
+  public String getDropdownValues(String listKey, String key) {
+
+    if (dropdownList.containsKey(listKey)) {
+      HashMap<String, String> map = dropdownList.get(listKey);
+      if (map.containsKey(key)) {
+        return map.get(key);
+      }
+
+    }
+    return "";
   }
 
 }

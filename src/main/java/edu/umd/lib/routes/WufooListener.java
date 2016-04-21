@@ -3,6 +3,7 @@ package edu.umd.lib.routes;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 
+import edu.umd.lib.services.SysAidConnector;
 import edu.umd.lib.services.WufooListenerImpl;
 
 public class WufooListener extends AbstractRoute {
@@ -25,8 +26,12 @@ public class WufooListener extends AbstractRoute {
         new Processor() {
           @Override
           public void process(Exchange exchange) throws Exception {
+
             WufooListenerImpl wufooProcessor = new WufooListenerImpl();
             wufooProcessor.processRequest(exchange);
+
+            SysAidConnector sysaid = new SysAidConnector();
+            sysaid.createServiceRequest();
           }
         });
   }

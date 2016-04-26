@@ -30,8 +30,8 @@ public class SysAidConnector {
 
   /*** Read from properties file ***/
   private String sysaid_URL = "https://libticketingdev.umd.edu/api/v1/";
-  private String sysaid_Username = "*******";
-  private String sysaid_Password = "*******";
+  private String sysaid_Username = "********";
+  private String sysaid_Password = "*********";
   private String session_id;
 
   private HashMap<String, HashMap<String, String>> dropdownList = new HashMap<String, HashMap<String, String>>();
@@ -74,11 +74,21 @@ public class SysAidConnector {
    ***/
   public SysAidConnector(String session_id) {
     this.session_id = session_id;
+    this.getAllList();
   }
+
+  HashMap<String, String> configuration = new HashMap<String, String>();
 
   /*** Authenticate the user while creating object ***/
   public SysAidConnector() {
     this.authenticate();
+    this.getAllList();
+
+    // Pending implementation from Properties file
+    configuration.put("Name", "request_user");
+    configuration.put("Email", "description");
+    configuration.put("Comment or Question", "description");
+    configuration.put("Subject", "title");
   }
 
   /***
@@ -166,11 +176,12 @@ public class SysAidConnector {
    *
    * @return
    */
-  public String createServiceRequest() {
+  public String createServiceRequest(HashMap<String, String> values) {
 
     try {
       JSONObject infoFields = new JSONObject();
-      infoFields.put("info", this.convertMaptoJSON(testData()));
+
+      infoFields.put("info", this.convertMaptoJSON(fieldMapping(values)));
 
       HttpResponse response = this.postRequest(infoFields, this.sysaid_URL + "/sr");
       HttpEntity entity = response.getEntity();
@@ -178,8 +189,7 @@ public class SysAidConnector {
 
       JSONObject json_result = new JSONObject(responseString);
 
-      log.info("ID:" + json_result.getString("id"));
-      System.out.println("ID:" + json_result.getString("id"));
+      log.info("Service Request Created, ID:" + json_result.getString("id"));
       return json_result.getString("id");
 
     } catch (JSONException e) {
@@ -272,7 +282,6 @@ public class SysAidConnector {
     } catch (IOException e) {
       log.error("IOException occured while attempting to "
           + "execute POST request.", e);
-      e.printStackTrace();
       return null;
 
     }
@@ -284,7 +293,7 @@ public class SysAidConnector {
    *
    * @throws JSONException
    */
-  public void getAllList() throws JSONException {
+  public void getAllList() {
     HttpResponse response = this.getRequest(this.sysaid_URL + "list");
     HttpEntity entity = response.getEntity();
     String responseString;
@@ -304,7 +313,9 @@ public class SysAidConnector {
         }
         dropdownList.put(list.getString("id"), list_map);
       }
-      log.info("Map >>>: " + dropdownList.size());
+    } catch (JSONException e) {
+      log.error("JSONException occured while attempting to "
+          + "execute POST request.", e);
     } catch (ParseException e) {
       log.error("ParseException occured while attempting to "
           + "execute POST request.", e);
@@ -343,16 +354,9 @@ public class SysAidConnector {
    */
   public static void main(String args[]) {
 
-    try {
-      SysAidConnector sysaid = new SysAidConnector();
-      sysaid.getAllList();
-      // sysaid.createServiceRequest();
-
-      log.info(sysaid.getDropdownValues("responsibility", "Ben Wallberg"));
-    } catch (JSONException e) {
-      log.error("JSONException occured while attempting to "
-          + "execute POST request.", e);
-    }
+    SysAidConnector sysaid = new SysAidConnector();
+    sysaid.getAllList();
+    // sysaid.createServiceRequest();
 
   }
 
@@ -391,9 +395,49 @@ public class SysAidConnector {
       if (map.containsKey(key)) {
         return map.get(key);
       }
-
     }
     return "";
+  }
+
+  /****
+   * Mapping WuFoo fields with SysAid fields Pending Implementation from
+   * Properties file
+   *
+   * @param values
+   * @return
+   */
+  public HashMap<String, String> fieldMapping(HashMap<String, String> values) {
+    HashMap<String, String> finalValues = new HashMap<String, String>();
+
+    // Finding mapping fields from configuration
+    for (Map.Entry<String, ?> entry : values.entrySet()) {
+
+      String wufoo_key = entry.getKey();// Field from WuFoo
+      String value = (String) entry.getValue();// Value from WuFoo
+
+      if (configuration.containsKey(wufoo_key)) {
+        // Check if there is mapping field in SysAid
+        String sysaid_field = configuration.get(wufoo_key);
+        // Get the mapping field from SysAid
+
+        if (dropdownList.containsKey(sysaid_field)) {
+          // Check if the field has a mapping list
+          value = getDropdownValues(sysaid_field, value);
+          // replace WuFoo value with mapping value from drop down
+        }
+        // Check if the field has already been added if added append to the
+        // Existing values
+        if (finalValues.containsKey(sysaid_field)) {
+          String current_value = finalValues.get(sysaid_field);
+          current_value = current_value + "\n" + value;
+          finalValues.put(sysaid_field, current_value);
+        } else {
+          finalValues.put(sysaid_field, value);
+        }
+      }
+    }
+    return finalValues;
+
   }
 
 }

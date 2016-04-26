@@ -1,5 +1,7 @@
 package edu.umd.lib.routes;
 
+import java.util.HashMap;
+
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 
@@ -28,10 +30,10 @@ public class WufooListener extends AbstractRoute {
           public void process(Exchange exchange) throws Exception {
 
             WufooListenerImpl wufooProcessor = new WufooListenerImpl();
-            wufooProcessor.processRequest(exchange);
+            HashMap<String, String> values = wufooProcessor.processRequest(exchange);
 
             SysAidConnector sysaid = new SysAidConnector();
-            sysaid.createServiceRequest();
+            sysaid.createServiceRequest(values);
           }
         });
   }

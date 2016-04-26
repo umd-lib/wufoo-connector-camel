@@ -20,10 +20,15 @@ public class WufooListenerImpl {
 
   /*********************************************
    * process the request and parses the field names and field values.
+   *
+   * @return
    ***/
-  public void processRequest(Exchange exchange) {
+  public HashMap<String, String> processRequest(Exchange exchange) {
 
     String message = exchange.getIn().getBody(String.class);
+
+    System.out.println("Message" + message);
+
     Map<String, List<String>> parameters = getQueryParams(message);
 
     exchange.getOut().setBody("Thank you for the submission");
@@ -33,11 +38,14 @@ public class WufooListenerImpl {
 
       checkHandshake(parameters);
       Map<String, String> fields = getFields(parameters);
-      getFieldStructure(parameters.get("FieldStructure"), fields);
-
+      printingMap(fields);
+      JSONArray fieldsList = getFieldStructure(parameters.get("FieldStructure"), fields);
+      HashMap<String, String> paramaters = extractParameters(fieldsList);
+      return paramaters;
     } catch (JSONException e) {
       e.printStackTrace();
     }
+    return null;
 
   }
 
@@ -110,23 +118,39 @@ public class WufooListenerImpl {
     }
     for (int i = 0; i < fieldsList.length(); i++) {
       JSONObject field = fieldsList.getJSONObject(i);
-      field.put("Value", fields.get(field.get("ID")));
+
+      if (field.has("SubFields")) {
+        String combined_value = "";
+        JSONArray subfields = (JSONArray) field.get("SubFields");
+        for (int j = 0; j < subfields.length(); j++) {
+          JSONObject subfield = subfields.getJSONObject(j);
+          if (j == 0) {
+            combined_value = fields.get(subfield.getString("ID"));
+          } else {
+            combined_value = combined_value + " " + fields.get(subfield.getString("ID"));
+          }
+        }
+        field.put("Value", combined_value);
+      } else {
+        field.put("Value", fields.get(field.get("ID")));
+      }
+
     }
-    log.info("Field List :" + fieldsList);
     return fieldsList;
   }
 
   /***********************************************
    * Method to print Hash maps
    ***/
-  @SuppressWarnings("unchecked")
   public void printingMap(Map<String, ?> parameters) {
 
     for (Map.Entry<String, ?> entry : parameters.entrySet()) {
       if (entry.getValue() instanceof List<?>) {
+
+        List<?> list = (List<?>) entry.getValue();
         String value = "";
-        for (int i = 0; i < ((Map<String, List<String>>) entry.getValue()).size(); i++) {
-          value = value + ((List<String>) entry.getValue()).get(i);
+        for (int i = 0; i < list.size(); i++) {
+          value = value + list.get(i);
         }
         log.info(entry.getKey() + ":" + value);
       } else {
@@ -134,6 +158,25 @@ public class WufooListenerImpl {
       }
 
     }
+  }
+
+  /***********************************************
+   * Method extract parameters from WuFoo response
+   ***/
+  public HashMap<String, String> extractParameters(JSONArray values) {
+
+    HashMap<String, String> paramaters = new HashMap<String, String>();
+    try {
+      for (int i = 0; i < values.length(); i++) {
+        JSONObject value = (JSONObject) values.get(i);
+        paramaters.put(value.getString("Title"), value.getString("Value"));
+      }
+    } catch (JSONException e) {
+      log.error("JSONException occured while attempting to "
+          + "execute POST request.", e);
+    }
+    return paramaters;
+
   }
 
 }

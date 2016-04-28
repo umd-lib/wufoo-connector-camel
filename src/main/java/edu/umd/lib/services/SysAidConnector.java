@@ -1,12 +1,15 @@
 package edu.umd.lib.services;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Properties;
+import java.util.Set;
 
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
@@ -75,6 +78,7 @@ public class SysAidConnector {
   public SysAidConnector(String session_id) {
     this.session_id = session_id;
     this.getAllList();
+    this.loadConfiguration();
   }
 
   HashMap<String, String> configuration = new HashMap<String, String>();
@@ -83,12 +87,29 @@ public class SysAidConnector {
   public SysAidConnector() {
     this.authenticate();
     this.getAllList();
+    this.loadConfiguration();
 
-    // Pending implementation from Properties file
-    configuration.put("Name", "request_user");
-    configuration.put("Email", "description");
-    configuration.put("Comment or Question", "description");
-    configuration.put("Subject", "title");
+  }
+
+  public void loadConfiguration() {
+
+    String resourceName = "Wufoo-Sysaid-Mapping.properties";
+    Properties properties = new Properties();
+
+    ClassLoader loader = Thread.currentThread().getContextClassLoader();
+    try (InputStream resourceStream = loader.getResourceAsStream(resourceName)) {
+
+      properties.load(resourceStream);
+      Set<Object> keys = properties.keySet();
+      for (Object k : keys) {
+        String key = (String) k;
+        configuration.put(key, properties.getProperty(key));
+      }
+
+    } catch (IOException e) {
+      log.error("IOException occured while attempting to "
+          + "execute POST request. Authentication Failed ", e);
+    }
   }
 
   /***
@@ -348,6 +369,7 @@ public class SysAidConnector {
 
     SysAidConnector sysaid = new SysAidConnector();
     sysaid.getAllList();
+
     // sysaid.createServiceRequest();
 
   }

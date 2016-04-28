@@ -128,8 +128,7 @@ public class SysAidConnector {
       this.session_id = parseSessionID(response);
 
       HttpEntity entity = response.getEntity();
-      String responseString = EntityUtils.toString(entity, "UTF-8");
-      log.info("Result" + responseString);
+      EntityUtils.toString(entity, "UTF-8");
 
     } catch (JSONException e) {
       log.error("JSONException occured while attempting to "
@@ -382,7 +381,6 @@ public class SysAidConnector {
   @SuppressWarnings("unchecked")
   public void printingMap(Map<String, ?> parameters) {
 
-    log.info("Printing");
     for (Map.Entry<String, ?> entry : parameters.entrySet()) {
       if (entry.getValue() instanceof List<?>) {
         String value = "";

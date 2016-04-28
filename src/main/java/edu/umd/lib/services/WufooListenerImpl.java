@@ -32,12 +32,13 @@ public class WufooListenerImpl {
     log.info("Total Number of Parameters from the request:" + parameters.size());
 
     try {
+
       checkHandshake(parameters);
       Map<String, String> fields = getFields(parameters);
-      printingMap(fields);
       JSONArray fieldsList = getFieldStructure(parameters.get("FieldStructure"), fields);
       HashMap<String, String> paramaters = extractParameters(fieldsList);
       return paramaters;
+
     } catch (JSONException e) {
       e.printStackTrace();
     }

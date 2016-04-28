@@ -32,9 +32,9 @@ public class SysAidConnector {
   private static Logger log = Logger.getLogger(SysAidConnector.class);
 
   /*** Read from properties file ***/
-  private String sysaid_URL = "https://libticketingdev.umd.edu/api/v1/";
-  private String sysaid_Username = "********";
-  private String sysaid_Password = "*********";
+  private String sysaid_URL;
+  private String sysaid_Username;
+  private String sysaid_Password;
   private String session_id;
 
   private HashMap<String, HashMap<String, String>> dropdownList = new HashMap<String, HashMap<String, String>>();
@@ -77,23 +77,41 @@ public class SysAidConnector {
    ***/
   public SysAidConnector(String session_id) {
     this.session_id = session_id;
+    this.loadConfiguration("configuration.properties");
+    this.wufooSysaidMapping("Wufoo-Sysaid-Mapping.properties");
     this.getAllList();
-    this.loadConfiguration();
   }
 
   HashMap<String, String> configuration = new HashMap<String, String>();
 
   /*** Authenticate the user while creating object ***/
   public SysAidConnector() {
+    this.loadConfiguration("configuration.properties");
+    this.wufooSysaidMapping("Wufoo-Sysaid-Mapping.properties");
     this.authenticate();
     this.getAllList();
-    this.loadConfiguration();
-
   }
 
-  public void loadConfiguration() {
+  public void loadConfiguration(String resourceName) {
 
-    String resourceName = "Wufoo-Sysaid-Mapping.properties";
+    Properties properties = new Properties();
+
+    ClassLoader loader = Thread.currentThread().getContextClassLoader();
+    try (InputStream resourceStream = loader.getResourceAsStream(resourceName)) {
+
+      properties.load(resourceStream);
+      this.sysaid_URL = properties.getProperty("SysAid.url");
+      this.sysaid_Username = properties.getProperty("SysAid.userName");
+      this.sysaid_Password = properties.getProperty("SysAid.password");
+
+    } catch (IOException e) {
+      log.error("IOException occured while attempting to "
+          + "execute POST request. Authentication Failed ", e);
+    }
+  }
+
+  public void wufooSysaidMapping(String resourceName) {
+
     Properties properties = new Properties();
 
     ClassLoader loader = Thread.currentThread().getContextClassLoader();

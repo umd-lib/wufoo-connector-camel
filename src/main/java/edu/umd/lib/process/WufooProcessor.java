@@ -1,4 +1,4 @@
-package edu.umd.lib.services;
+package edu.umd.lib.process;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -9,41 +9,39 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.camel.Exchange;
+import org.apache.camel.Processor;
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class WufooListenerImpl {
+import edu.umd.lib.services.SysAidConnector;
 
-  private static Logger log = Logger.getLogger(WufooListenerImpl.class);
+public class WufooProcessor implements Processor {
+
+  private static Logger log = Logger.getLogger(WufooProcessor.class);
 
   /*********************************************
    * process the request and parses the field names and field values.
    *
    * @return
    ***/
-  public HashMap<String, String> processRequest(Exchange exchange) {
+  @Override
+  public void process(Exchange exchange) throws Exception {
 
     String message = exchange.getIn().getBody(String.class);
     Map<String, List<String>> parameters = getQueryParams(message);
 
+    checkHandshake(parameters);
+    Map<String, String> fields = getFields(parameters);
+    JSONArray fieldsList = getFieldStructure(parameters.get("FieldStructure"), fields);
+    HashMap<String, String> values = extractParameters(fieldsList);
+
     exchange.getOut().setBody("Thank you for the submission");
     log.info("Total Number of Parameters from the request:" + parameters.size());
 
-    try {
-
-      checkHandshake(parameters);
-      Map<String, String> fields = getFields(parameters);
-      JSONArray fieldsList = getFieldStructure(parameters.get("FieldStructure"), fields);
-      HashMap<String, String> paramaters = extractParameters(fieldsList);
-      return paramaters;
-
-    } catch (JSONException e) {
-      e.printStackTrace();
-    }
-    return null;
-
+    SysAidConnector sysaid = new SysAidConnector();
+    sysaid.createServiceRequest(values);
   }
 
   /***********************************************

@@ -1,12 +1,8 @@
 package edu.umd.lib.routes;
 
-import java.util.HashMap;
-
 import org.apache.camel.Exchange;
-import org.apache.camel.Processor;
 
-import edu.umd.lib.services.SysAidConnector;
-import edu.umd.lib.services.WufooListenerImpl;
+import edu.umd.lib.process.WufooProcessor;
 
 public class WufooListener extends AbstractRoute {
 
@@ -25,20 +21,11 @@ public class WufooListener extends AbstractRoute {
   @Override
   protected void defineRoute() throws Exception {
     from("jetty:" + this.getEndpoint()).streamCaching()
-        .routeId("WufooListener")
-        .process(
-            new Processor() {
-              @Override
-              public void process(Exchange exchange) throws Exception {
-
-                WufooListenerImpl wufooProcessor = new WufooListenerImpl();
-                HashMap<String, String> values = wufooProcessor.processRequest(exchange);
-
-                SysAidConnector sysaid = new SysAidConnector();
-                sysaid.createServiceRequest(values);
-              }
-            })
+        .routeId("WufooListener")// Load from properties file
+        .process(new WufooProcessor())
         .onException(Exception.class)
+        .maximumRedeliveries("3")// Load from properties file
+        .log("Index Routing Error: WufooListener")
         .handled(true)
         .transform(constant("Something went wrong"))
         .setHeader(Exchange.HTTP_RESPONSE_CODE, constant(500));

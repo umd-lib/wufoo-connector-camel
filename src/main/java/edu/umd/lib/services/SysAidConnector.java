@@ -157,17 +157,9 @@ public class SysAidConnector {
     fields.put("status", "5");
     fields.put("priority", "1");
     fields.put("description", "This is created from Rest API");
-    fields.put("cust_notes", " Notes from CUST");
-    fields.put("change_category", "1");
     fields.put("responsibility", "1222");
-    fields.put("cust_text1", "Cust text");
     fields.put("request_user", "1222");
-    fields.put("resolution", "hello Res");
     fields.put("title", " created from Rest api");
-    fields.put("followup_user", "1199");
-    fields.put("cust_list1", "14");
-    fields.put("problem_sub_type", "3D Print Request");
-
     return fields;
   }
 
@@ -435,6 +427,7 @@ public class SysAidConnector {
           finalValues.put(sysaid_field, value);
         }
       }
+
     }
     return finalValues;
 

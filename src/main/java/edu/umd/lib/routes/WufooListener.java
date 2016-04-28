@@ -24,18 +24,24 @@ public class WufooListener extends AbstractRoute {
 
   @Override
   protected void defineRoute() throws Exception {
-    from("jetty:" + this.getEndpoint()).streamCaching().process(
-        new Processor() {
-          @Override
-          public void process(Exchange exchange) throws Exception {
+    from("jetty:" + this.getEndpoint()).streamCaching()
+        .routeId("WufooListener")
+        .process(
+            new Processor() {
+              @Override
+              public void process(Exchange exchange) throws Exception {
 
-            WufooListenerImpl wufooProcessor = new WufooListenerImpl();
-            HashMap<String, String> values = wufooProcessor.processRequest(exchange);
+                WufooListenerImpl wufooProcessor = new WufooListenerImpl();
+                HashMap<String, String> values = wufooProcessor.processRequest(exchange);
 
-            SysAidConnector sysaid = new SysAidConnector();
-            sysaid.createServiceRequest(values);
-          }
-        });
+                SysAidConnector sysaid = new SysAidConnector();
+                sysaid.createServiceRequest(values);
+              }
+            })
+        .onException(Exception.class)
+        .handled(true)
+        .transform(constant("Something went wrong"))
+        .setHeader(Exchange.HTTP_RESPONSE_CODE, constant(500));
   }
 
 }

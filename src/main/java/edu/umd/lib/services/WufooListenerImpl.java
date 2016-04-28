@@ -26,16 +26,12 @@ public class WufooListenerImpl {
   public HashMap<String, String> processRequest(Exchange exchange) {
 
     String message = exchange.getIn().getBody(String.class);
-
-    System.out.println("Message" + message);
-
     Map<String, List<String>> parameters = getQueryParams(message);
 
     exchange.getOut().setBody("Thank you for the submission");
     log.info("Total Number of Parameters from the request:" + parameters.size());
 
     try {
-
       checkHandshake(parameters);
       Map<String, String> fields = getFields(parameters);
       printingMap(fields);

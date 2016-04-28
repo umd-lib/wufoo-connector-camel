@@ -1,9 +1,9 @@
 package edu.umd.lib.routes;
 
-import org.apache.camel.builder.RouteBuilder;
+import org.apache.camel.spring.SpringRouteBuilder;
 import org.springframework.core.env.Environment;
 
-public abstract class AbstractRoute extends RouteBuilder {
+public abstract class AbstractRoute extends SpringRouteBuilder {
 
   /**
    * The domain of this route

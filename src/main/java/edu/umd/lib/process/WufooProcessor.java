@@ -20,20 +20,40 @@ import org.json.JSONObject;
 
 import edu.umd.lib.services.SysAidConnector;
 
+/**
+ * WufooProcessor process the request from WuFoo by parsing the request then
+ * creating a Hash map of fields and values from the form. The map is then
+ * passed to SysAidConnector for creating a request in SysAid
+ * <p>
+ * Before the WuFoo request is processed the request should be validated to make
+ * sure the request is not a spam request. This is done by comparing the
+ * handshake key from WuFoo and configuration file. If the handshake key does
+ * not match a custom exception is thrown.
+ *
+ * @since 1.0
+ */
 public class WufooProcessor implements Processor {
 
-  private static Logger log = Logger.getLogger(WufooProcessor.class);
   private String handShakeKey;
 
+  private static Logger log = Logger.getLogger(WufooProcessor.class);
+
+  /***
+   * Load the configuration file while creating the object and populate the
+   * handshake key from the properties file
+   */
   public WufooProcessor() {
     this.loadConfiguration("configuration.properties");
   }
 
-  /*********************************************
-   * process the request and parses the field names and field values.
+  /***
+   * Process method is the main method of WufooProcessor. The Exchange from the
+   * route is parsed and parameters from WuFoo form is created as Hash map. The
+   * hash map created is used to create SysAid Ticket
    *
-   * @return
-   ***/
+   * @exception CamelHandshakeKeyException
+   * @exception SysAidLoginException
+   */
   @Override
   public void process(Exchange exchange) throws Exception {
 
@@ -52,17 +72,20 @@ public class WufooProcessor implements Processor {
     sysaid.createServiceRequest(values);
   }
 
-  /***********************************************
-   * Created key value pair from the url string
-   ****/
-  public Map<String, List<String>> getQueryParams(String paramaters) {
+  /***
+   * From response parse the string to form hash map of parameters
+   *
+   * @param parameters
+   *          from the WuFoo Request @return Hash map with parameter name as key
+   *          and field value as value @exception
+   */
+  public Map<String, List<String>> getQueryParams(String queryString) {
 
     try {
 
       Map<String, List<String>> params = new HashMap<String, List<String>>();
-      String query = paramaters;
 
-      for (String param : query.split("&")) {
+      for (String param : queryString.split("&")) {
         String[] pair = param.split("=");
         String key = URLDecoder.decode(pair[0], "UTF-8");
         String value = "";
@@ -78,16 +101,20 @@ public class WufooProcessor implements Processor {
       }
       // printingMap(params);
       return params;
+
     } catch (UnsupportedEncodingException ex) {
       throw new AssertionError(ex);
     }
   }
 
-  /***********************************************
-   * Checks for handshake key and validates if request is valid
+  /***
+   * Compare handshake key from WuFoo and Camel and throw exception if the key
+   * does not match
    *
-   * @throws CamelHandShakeException
-   ****/
+   * @param map
+   *          Contains all the fields from request from the WuFoo Request
+   * @exception CamelHandShakeException
+   */
   public void checkHandshake(Map<String, List<String>> parameters) throws CamelHandShakeException {
 
     String handshake = parameters.get("HandshakeKey").get(0);
@@ -103,9 +130,13 @@ public class WufooProcessor implements Processor {
 
   }
 
-  /***********************************************
-   * Get the fields and values
-   ****/
+  /***
+   * From the list of all parameters filter only the fields required for SysAid
+   *
+   * @param Map
+   *          contains all fields
+   * @return Map Contains only fields related to SysAid Ticket
+   */
   public Map<String, String> getFields(Map<String, List<String>> parameters) {
     Map<String, String> fields = new HashMap<String, String>();
     Set<String> parameterNames = parameters.keySet();
@@ -119,10 +150,17 @@ public class WufooProcessor implements Processor {
     return fields;
   }
 
-  /***********************************************
-   * Get the field Structure
-   ***/
-  public JSONArray getFieldStructure(List<String> fieldStructure, Map<String, String> fields) throws JSONException {
+  /***
+   * WuFoo provides the field structure in each response. Use the field
+   * Structure to construct what fields the form contains in the request
+   *
+   * @param List
+   *          contains all fields
+   * @param Map
+   *          Contains fields that has values
+   */
+  public JSONArray getFieldStructure(List<String> fieldStructure,
+      Map<String, String> fields) throws JSONException {
 
     JSONArray json = new JSONArray(fieldStructure);
     JSONArray fieldsList = new JSONArray();
@@ -154,9 +192,13 @@ public class WufooProcessor implements Processor {
     return fieldsList;
   }
 
-  /***********************************************
-   * Method to print Hash maps
-   ***/
+  /***
+   * Utility function to print maps, Loop through each key set and value and
+   * print the contain. If the value is a collection again the collection is
+   * converted into a single string and the key value pair is printed
+   *
+   * @param map
+   */
   public void printingMap(Map<String, ?> parameters) {
 
     for (Map.Entry<String, ?> entry : parameters.entrySet()) {
@@ -175,9 +217,13 @@ public class WufooProcessor implements Processor {
     }
   }
 
-  /***********************************************
-   * Method extract parameters from WuFoo response
-   ***/
+  /***
+   * The JSON from WuFoo contains details about each field. Get the field name
+   * and corresponding value from the JSON array and create a map with just
+   * field name as key and corresponding value as value.
+   *
+   * @param map
+   */
   public HashMap<String, String> extractParameters(JSONArray values) {
 
     HashMap<String, String> paramaters = new HashMap<String, String>();
@@ -191,13 +237,13 @@ public class WufooProcessor implements Processor {
           + "execute POST request.", e);
     }
     return paramaters;
-
   }
 
-  /****
-   * Loading configuration File
+  /***
+   * Method to load the configuration from properties file
    *
    * @param resourceName
+   *          properties file name
    */
   public void loadConfiguration(String resourceName) {
 
@@ -216,16 +262,10 @@ public class WufooProcessor implements Processor {
   }
 
   /***
-   * Custom Exception to check if the request is valid request from Wufoo
-   * 
-   * @author rameshb
-   *
+   * Custom Exception to check if the request is valid request from WuFoo
    */
   class CamelHandShakeException extends Exception {
 
-    /**
-     *
-     */
     private static final long serialVersionUID = 1L;
 
     public CamelHandShakeException() {

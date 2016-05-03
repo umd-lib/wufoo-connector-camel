@@ -84,8 +84,12 @@ public class SysAidConnector {
 
   HashMap<String, String> configuration = new HashMap<String, String>();
 
-  /*** Authenticate the user while creating object ***/
-  public SysAidConnector() {
+  /***
+   * Authenticate the user while creating object
+   *
+   * @throws SysAidLoginException
+   ***/
+  public SysAidConnector() throws SysAidLoginException {
     this.loadConfiguration("configuration.properties");
     this.wufooSysaidMapping("Wufoo-Sysaid-Mapping.properties");
     this.authenticate();
@@ -133,8 +137,10 @@ public class SysAidConnector {
   /***
    * Authenticate the user id with SysAid and get session id to be used for
    * further request process
+   *
+   * @throws SysAidLoginException
    ***/
-  public void authenticate() {
+  public void authenticate() throws SysAidLoginException {
 
     try {
 
@@ -143,10 +149,14 @@ public class SysAidConnector {
       loginCredentials.put("password", this.sysaid_Password);
 
       HttpResponse response = this.postRequest(loginCredentials, this.sysaid_URL + "login");
-      this.session_id = parseSessionID(response);
-
       HttpEntity entity = response.getEntity();
-      EntityUtils.toString(entity, "UTF-8");
+      String responseString = EntityUtils.toString(entity, "UTF-8");
+
+      JSONObject json_result = new JSONObject(responseString);
+      if (json_result.has("status") && json_result.getString("status").equalsIgnoreCase("401")) {
+        throw new SysAidLoginException("Invalid User. Authentication Failed");
+      }
+      this.session_id = parseSessionID(response);
 
     } catch (JSONException e) {
       log.error("JSONException occured while attempting to "
@@ -216,9 +226,7 @@ public class SysAidConnector {
       HttpResponse response = this.postRequest(infoFields, this.sysaid_URL + "/sr");
       HttpEntity entity = response.getEntity();
       String responseString = EntityUtils.toString(entity, "UTF-8");
-
       JSONObject json_result = new JSONObject(responseString);
-
       log.info("Service Request Created, ID:" + json_result.getString("id"));
       return json_result.getString("id");
 
@@ -384,10 +392,14 @@ public class SysAidConnector {
    */
   public static void main(String args[]) {
 
-    SysAidConnector sysaid = new SysAidConnector();
-    sysaid.getAllList();
-
-    // sysaid.createServiceRequest();
+    try {
+      SysAidConnector sysaid = new SysAidConnector();
+      sysaid.getAllList();
+      // sysaid.createServiceRequest();
+    } catch (SysAidLoginException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
 
   }
 
@@ -469,6 +481,28 @@ public class SysAidConnector {
     }
     return finalValues;
 
+  }
+
+  /***
+   * Custom Exception to check if the request is valid request from Wufoo
+   *
+   * @author rameshb
+   *
+   */
+  class SysAidLoginException extends Exception {
+
+    /**
+     *
+     */
+    private static final long serialVersionUID = 1L;
+
+    public SysAidLoginException() {
+    }
+
+    // Constructor that accepts a message
+    public SysAidLoginException(String message) {
+      super(message);
+    }
   }
 
 }

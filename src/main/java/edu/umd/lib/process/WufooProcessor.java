@@ -1,11 +1,14 @@
 package edu.umd.lib.process;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 
 import org.apache.camel.Exchange;
@@ -20,6 +23,11 @@ import edu.umd.lib.services.SysAidConnector;
 public class WufooProcessor implements Processor {
 
   private static Logger log = Logger.getLogger(WufooProcessor.class);
+  private String handShakeKey;
+
+  public WufooProcessor() {
+    this.loadConfiguration("configuration.properties");
+  }
 
   /*********************************************
    * process the request and parses the field names and field values.
@@ -77,10 +85,22 @@ public class WufooProcessor implements Processor {
 
   /***********************************************
    * Checks for handshake key and validates if request is valid
+   *
+   * @throws CamelHandShakeException
    ****/
-  public void checkHandshake(Map<String, List<String>> parameters) {
+  public void checkHandshake(Map<String, List<String>> parameters) throws CamelHandShakeException {
+
     String handshake = parameters.get("HandshakeKey").get(0);
-    log.info("handshake:" + handshake);
+    log.info("Wufoo handshake:" + handshake);
+    log.info("camel handshake:" + handShakeKey);
+    if (handshake == null) {
+      throw new CamelHandShakeException("Wufoo Handshake key is empty.");
+    } else if (this.handShakeKey == null) {
+      throw new CamelHandShakeException("Camel Handshake key is empty.");
+    } else if (!this.handShakeKey.equalsIgnoreCase(handshake)) {
+      throw new CamelHandShakeException("Camel Handshake key and Wufoo Handshake key does not match.");
+    }
+
   }
 
   /***********************************************
@@ -172,6 +192,49 @@ public class WufooProcessor implements Processor {
     }
     return paramaters;
 
+  }
+
+  /****
+   * Loading configuration File
+   *
+   * @param resourceName
+   */
+  public void loadConfiguration(String resourceName) {
+
+    Properties properties = new Properties();
+
+    ClassLoader loader = Thread.currentThread().getContextClassLoader();
+    try (InputStream resourceStream = loader.getResourceAsStream(resourceName)) {
+
+      properties.load(resourceStream);
+      this.handShakeKey = properties.getProperty("wufoo.handshake_key");
+
+    } catch (IOException e) {
+      log.error("IOException occured while attempting to "
+          + "execute POST request. Authentication Failed ", e);
+    }
+  }
+
+  /***
+   * Custom Exception to check if the request is valid request from Wufoo
+   * 
+   * @author rameshb
+   *
+   */
+  class CamelHandShakeException extends Exception {
+
+    /**
+     *
+     */
+    private static final long serialVersionUID = 1L;
+
+    public CamelHandShakeException() {
+    }
+
+    // Constructor that accepts a message
+    public CamelHandShakeException(String message) {
+      super(message);
+    }
   }
 
 }

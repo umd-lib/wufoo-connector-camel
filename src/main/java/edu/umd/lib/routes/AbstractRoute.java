@@ -8,11 +8,11 @@ public abstract class AbstractRoute extends SpringRouteBuilder {
   /**
    * The domain of this route
    */
-  private String domain = "http://localhost:8080/";
+  private String domain = "{{default.domain}}";
   /**
    * The name of this route
    */
-  private String name = "RouteName";
+  private String name = "{{default.routeName}}";
   /**
    * The endpoint exposed by Camel
    */
@@ -20,7 +20,7 @@ public abstract class AbstractRoute extends SpringRouteBuilder {
   /**
    * The service name as defined in the respective properties file.
    */
-  private String serviceName = "ServiceName";
+  private String serviceName = "{{default.serviceName}}";
 
   @Override
   public void configure() throws Exception {

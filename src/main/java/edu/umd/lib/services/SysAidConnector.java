@@ -436,7 +436,7 @@ public class SysAidConnector {
 
   /****
    * Mapping WuFoo fields with SysAid fields
-   * 
+   *
    * @param values
    * @return
    */

@@ -6,8 +6,10 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 
@@ -17,8 +19,6 @@ import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import edu.umd.lib.services.SysAidConnector;
 
 /**
  * WufooProcessor process the request from WuFoo by parsing the request then
@@ -65,11 +65,11 @@ public class WufooProcessor implements Processor {
     JSONArray fieldsList = getFieldStructure(parameters.get("FieldStructure"), fields);
     HashMap<String, String> values = extractParameters(fieldsList);
 
-    exchange.getOut().setBody("Thank you for the submission");
+    exchange.getOut().setBody(values);
     log.info("Total Number of Parameters from the request:" + parameters.size());
 
-    SysAidConnector sysaid = new SysAidConnector();
-    sysaid.createServiceRequest(values);
+    // SysAidConnector sysaid = new SysAidConnector();
+    // sysaid.createServiceRequest(values);
   }
 
   /***
@@ -275,6 +275,27 @@ public class WufooProcessor implements Processor {
     public CamelHandShakeException(String message) {
       super(message);
     }
+  }
+
+  /****
+   * Convert fields in HasHmap to JSONArray
+   *
+   * @throws JSONException
+   */
+  public JSONArray convertMaptoJSON(Map<String, String> mp) throws JSONException {
+
+    JSONArray fields = new JSONArray();
+    Iterator<Entry<String, String>> it = mp.entrySet().iterator();
+    while (it.hasNext()) {
+
+      Entry<String, String> pair = it.next();
+
+      JSONObject obj = new JSONObject();
+      obj.put("value", pair.getValue());
+      obj.put("key", pair.getKey());
+      fields.put(obj);
+    }
+    return fields;
   }
 
 }

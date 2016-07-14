@@ -1,26 +1,25 @@
 package edu.umd.lib;
 
-import org.apache.camel.main.Main;
-
+import org.apache.camel.CamelContext;
+import org.apache.camel.component.properties.PropertiesComponent;
+import org.apache.camel.impl.DefaultCamelContext;
 import edu.umd.lib.routes.WufooListener;
 
 public class ServicesApp {
+	
+	 public static void main( String[] args ) throws Exception
+	 {
 
-  /**
-   * @param args
-   * @throws Exception
-   */
-  public static void main(String[] args) throws Exception {
-    ServicesApp hub = new ServicesApp();
-    hub.boot();
-  }
-
-  public void boot() throws Exception {
-    Main app = new Main();
-    // enable the shutdown hook
-    app.enableHangupSupport();
-    app.addRouteBuilder(new WufooListener());
-    // do .run() instead of .start()
-    app.run();
-  }
+		CamelContext context = new DefaultCamelContext();
+	
+	    PropertiesComponent propertiesComponent = context.getComponent("properties", PropertiesComponent.class);
+	    propertiesComponent.setLocation("classpath:configuration.properties");
+	    propertiesComponent.setSystemPropertiesMode(PropertiesComponent.SYSTEM_PROPERTIES_MODE_OVERRIDE);
+	    context.addRoutes(new WufooListener());
+	    
+	    
+	    context.start();
+	    Thread.sleep(1000 * 60 * 15); // 15 min
+	    context.stop();
+	}
 }

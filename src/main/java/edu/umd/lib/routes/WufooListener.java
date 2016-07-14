@@ -1,7 +1,6 @@
 package edu.umd.lib.routes;
 
-import org.apache.camel.Exchange;
-
+import edu.umd.lib.process.SysAidProcessor;
 import edu.umd.lib.process.WufooProcessor;
 
 public class WufooListener extends AbstractRoute {
@@ -12,23 +11,40 @@ public class WufooListener extends AbstractRoute {
    */
   public WufooListener() {
     // sets the name of this bean
-    this.setName("wufoo");
+    this.setName("{{wufoo.routeName}}");
     // defines the service-name as set in the properties file
-    this.setServiceName("wufoo-listener");
+    this.setServiceName("{{wufoo.serviceName}}");
 
   }
 
   @Override
   protected void defineRoute() throws Exception {
+
+    /**
+     * A generic error handler (specific to this RouteBuilder)
+     */
+    onException(Exception.class)
+        .maximumRedeliveries("{{camel.maximum_tries}}")
+        .log("Index Routing Error: ${routeId}");
+
+    /**
+     * Parse Request from WuFoo Web hooks and create hash map for SysAid Route
+     */
     from("jetty:" + this.getEndpoint()).streamCaching()
-        .routeId("WufooListener")// Load from properties file
+        .routeId("WufooListener")
         .process(new WufooProcessor())
-        .onException(Exception.class)
-        .maximumRedeliveries("3")// Load from properties file
-        .log("Index Routing Error: WufooListener")
-        .handled(true)
-        .transform(constant("Something went wrong"))
-        .setHeader(Exchange.HTTP_RESPONSE_CODE, constant(500));
+        .log("Wufoo Process Completed")
+        .to("direct:connect.SysAid");
+
+    /**
+     * Connect to SysAid and create Service Request. All the Request to SysAid
+     * is processed under one route Since SysAid works on Session
+     */
+    from("direct:connect.SysAid")
+        .routeId("SysAidConnector")
+        .process(new SysAidProcessor())
+        .log("SysAid Request Created");
+
   }
 
 }

@@ -27,17 +27,29 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+/**
+ * SysAidConnector connects to SysAid using Login credentials from Configuration
+ * file. The fields required to create service request is mapped to a
+ * configuration file to map to SysAid field and then processed to create a
+ * service request
+ * <p>
+ * SysAid requires session id in each request to validate the user. When
+ * SysAidConnector class object is created session id is created by validating
+ * the user and the session id is used for other request
+ *
+ * @since 1.0
+ */
 public class SysAidConnector {
 
-  private static Logger log = Logger.getLogger(SysAidConnector.class);
+  private Logger log = Logger.getLogger(SysAidConnector.class);
 
-  /*** Read from properties file ***/
   private String sysaid_URL;
   private String sysaid_Username;
   private String sysaid_Password;
   private String session_id;
 
   private HashMap<String, HashMap<String, String>> dropdownList = new HashMap<String, HashMap<String, String>>();
+  HashMap<String, String> configuration = new HashMap<String, String>();
 
   public String getSysaid_URL() {
     return sysaid_URL;
@@ -72,9 +84,35 @@ public class SysAidConnector {
   }
 
   /***
-   * If session_id is already present pass information to skip authentication
-   * process
-   ***/
+   * Default Constructor, While creating an object the configuration for SysAid
+   * is loaded to the object and the field mapping configuration is also loaded.
+   * Using the credentials from the configuration settings user is validated. If
+   * validation fails custom exceptions is thrown since further connection with
+   * SysAid is not possible.
+   * <p>
+   * After authenticating the user all the list from SysAid is populated so that
+   * it can be used for further request
+   *
+   * @throws SysAidLoginException
+   */
+  public SysAidConnector() throws SysAidLoginException {
+    this.loadConfiguration("configuration.properties");
+    this.wufooSysaidMapping("Wufoo-Sysaid-Mapping.properties");
+    this.authenticate();
+    this.getAllList();
+  }
+
+  /***
+   * Default Constructor, While creating an object the configuration for SysAid
+   * is loaded to the object and the field mapping configuration is also loaded.
+   * If a session is already created use the same session id instead of creating
+   * a new session.
+   * <p>
+   * After authenticating the user all the list from SysAid is populated so that
+   * it can be used for further request
+   *
+   * @throws SysAidLoginException
+   */
   public SysAidConnector(String session_id) {
     this.session_id = session_id;
     this.loadConfiguration("configuration.properties");
@@ -82,20 +120,15 @@ public class SysAidConnector {
     this.getAllList();
   }
 
-  HashMap<String, String> configuration = new HashMap<String, String>();
-
-  /*** Authenticate the user while creating object ***/
-  public SysAidConnector() {
-    this.loadConfiguration("configuration.properties");
-    this.wufooSysaidMapping("Wufoo-Sysaid-Mapping.properties");
-    this.authenticate();
-    this.getAllList();
-  }
-
+  /***
+   * Method to load the configuration from properties file
+   *
+   * @param resourceName
+   *          properties file name
+   */
   public void loadConfiguration(String resourceName) {
 
     Properties properties = new Properties();
-
     ClassLoader loader = Thread.currentThread().getContextClassLoader();
     try (InputStream resourceStream = loader.getResourceAsStream(resourceName)) {
 
@@ -110,10 +143,16 @@ public class SysAidConnector {
     }
   }
 
+  /***
+   * Load the mapping from SysAid and WuFoo forms in the properties file into
+   * the map to find the mappings easily
+   *
+   * @param resourceName
+   *          properties file name
+   */
   public void wufooSysaidMapping(String resourceName) {
 
     Properties properties = new Properties();
-
     ClassLoader loader = Thread.currentThread().getContextClassLoader();
     try (InputStream resourceStream = loader.getResourceAsStream(resourceName)) {
 
@@ -132,9 +171,12 @@ public class SysAidConnector {
 
   /***
    * Authenticate the user id with SysAid and get session id to be used for
-   * further request process
+   * further request process. If the authentication fails throw custom
+   * SysAidlogin exception.
+   *
+   * @throws SysAidLoginException
    ***/
-  public void authenticate() {
+  public void authenticate() throws SysAidLoginException {
 
     try {
 
@@ -143,10 +185,14 @@ public class SysAidConnector {
       loginCredentials.put("password", this.sysaid_Password);
 
       HttpResponse response = this.postRequest(loginCredentials, this.sysaid_URL + "login");
-      this.session_id = parseSessionID(response);
-
       HttpEntity entity = response.getEntity();
-      EntityUtils.toString(entity, "UTF-8");
+      String responseString = EntityUtils.toString(entity, "UTF-8");
+
+      JSONObject json_result = new JSONObject(responseString);
+      if (json_result.has("status") && json_result.getString("status").equalsIgnoreCase("401")) {
+        throw new SysAidLoginException("Invalid User. Authentication Failed");
+      }
+      this.session_id = parseSessionID(response);
 
     } catch (JSONException e) {
       log.error("JSONException occured while attempting to "
@@ -161,10 +207,10 @@ public class SysAidConnector {
   }
 
   /***
-   * Get Session ID from cookies from HTTP response
+   * Get Session ID from cookies from HTTP response. The session id is under
+   * header parameter "Set-Cookie" with key JSESSIONID
    *
    * @param response
-   * @return
    */
   private String parseSessionID(HttpResponse response) {
 
@@ -184,9 +230,7 @@ public class SysAidConnector {
   }
 
   /***
-   * Dummy Data
-   *
-   * @return
+   * Dummy Data for testing purpose
    */
   public HashMap<String, String> testData() {
 
@@ -202,23 +246,21 @@ public class SysAidConnector {
   }
 
   /***
-   * Create Service Request in SYSaid with following information
+   * Create Service Request in SysAid using the value map sent from WuFoo. The
+   * map is compared with the field mapping map and converted to the fields
+   * SysAid expects and sent to SysAid as JSON info parameters
    *
-   * @return
+   * @return ServiceRequest_ID
    */
   public String createServiceRequest(HashMap<String, String> values) {
 
     try {
       JSONObject infoFields = new JSONObject();
-
       infoFields.put("info", this.convertMaptoJSON(fieldMapping(values)));
-
       HttpResponse response = this.postRequest(infoFields, this.sysaid_URL + "/sr");
       HttpEntity entity = response.getEntity();
       String responseString = EntityUtils.toString(entity, "UTF-8");
-
       JSONObject json_result = new JSONObject(responseString);
-
       log.info("Service Request Created, ID:" + json_result.getString("id"));
       return json_result.getString("id");
 
@@ -239,9 +281,10 @@ public class SysAidConnector {
   }
 
   /***
-   * HTTP post request method if session id already present include in the
-   * request
-   ***/
+   * This method is used to post a request to the SySAid end point. Before
+   * posting the request the session id from the object is added to the request.
+   * This acts as access token for all the post request made to SysAid
+   */
   public HttpResponse postRequest(JSONObject paramaters, String endpoint) {
     try {
 
@@ -281,9 +324,10 @@ public class SysAidConnector {
   }
 
   /***
-   * HTTP post request method if session id already present include in the
-   * request
-   ***/
+   * This method is used to get request to the SySAid end point. Before sending
+   * the request the session id from the object is added to the request. This
+   * acts as access token for all the post request made to SysAid
+   */
   public HttpResponse getRequest(String endpoint) {
 
     try {
@@ -319,9 +363,9 @@ public class SysAidConnector {
   }
 
   /***
-   * Get all List SysAid API and store for further processing
-   *
-   * @throws JSONException
+   * Connect to SysAid and get all the List that is being used. SysAid expects
+   * the numerical value for many fields and this list will be used to get the
+   * numerical value for the corresponding text value for each field
    */
   public void getAllList() {
     HttpResponse response = this.getRequest(this.sysaid_URL + "list");
@@ -358,7 +402,6 @@ public class SysAidConnector {
   /****
    * Convert fields in HasHmap to JSONArray
    *
-   * @return
    * @throws JSONException
    */
   public JSONArray convertMaptoJSON(Map<String, String> mp) throws JSONException {
@@ -377,46 +420,8 @@ public class SysAidConnector {
     return fields;
   }
 
-  /***
-   * Main method for testing the application
-   *
-   * @param args
-   */
-  public static void main(String args[]) {
-
-    SysAidConnector sysaid = new SysAidConnector();
-    sysaid.getAllList();
-
-    // sysaid.createServiceRequest();
-
-  }
-
-  /**
-   * Method to print values in hash map for debugging
-   *
-   * @param parameters
-   */
-  @SuppressWarnings("unchecked")
-  public void printingMap(Map<String, ?> parameters) {
-
-    for (Map.Entry<String, ?> entry : parameters.entrySet()) {
-      if (entry.getValue() instanceof List<?>) {
-        String value = "";
-        for (int i = 0; i < ((Map<String, List<String>>) entry.getValue()).size(); i++) {
-          value = value + ((List<String>) entry.getValue()).get(i);
-        }
-        log.info(entry.getKey() + ":" + value);
-      } else {
-        log.info(entry.getKey() + ":" + entry.getValue());
-      }
-
-    }
-  }
-
   /**
    * Search the Hash map for a particular key under a list
-   *
-   * @param parameters
    */
   public String getDropdownValues(String listKey, String key) {
 
@@ -430,8 +435,7 @@ public class SysAidConnector {
   }
 
   /****
-   * Mapping WuFoo fields with SysAid fields Pending Implementation from
-   * Properties file
+   * Mapping WuFoo fields with SysAid fields
    *
    * @param values
    * @return
@@ -469,6 +473,60 @@ public class SysAidConnector {
     }
     return finalValues;
 
+  }
+
+  /***
+   * Custom Exception when SysAid Authentication Fails
+   */
+  class SysAidLoginException extends Exception {
+    private static final long serialVersionUID = 1L;
+
+    public SysAidLoginException() {
+    }
+
+    public SysAidLoginException(String message) {
+      super(message);
+    }
+  }
+
+  /***
+   * Main method for testing the application
+   *
+   * @param args
+   */
+  public static void main(String args[]) {
+
+    try {
+      SysAidConnector sysaid = new SysAidConnector();
+      sysaid.getAllList();
+      // sysaid.createServiceRequest();
+    } catch (SysAidLoginException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+
+  }
+
+  /**
+   * Method to print values in hash map for debugging
+   *
+   * @param parameters
+   */
+  @SuppressWarnings("unchecked")
+  public void printingMap(Map<String, ?> parameters) {
+
+    for (Map.Entry<String, ?> entry : parameters.entrySet()) {
+      if (entry.getValue() instanceof List<?>) {
+        String value = "";
+        for (int i = 0; i < ((Map<String, List<String>>) entry.getValue()).size(); i++) {
+          value = value + ((List<String>) entry.getValue()).get(i);
+        }
+        log.info(entry.getKey() + ":" + value);
+      } else {
+        log.info(entry.getKey() + ":" + entry.getValue());
+      }
+
+    }
   }
 
 }

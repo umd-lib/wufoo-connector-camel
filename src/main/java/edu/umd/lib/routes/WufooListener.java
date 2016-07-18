@@ -1,5 +1,7 @@
 package edu.umd.lib.routes;
 
+import org.apache.camel.LoggingLevel;
+
 import edu.umd.lib.process.SysAidProcessor;
 import edu.umd.lib.process.WufooProcessor;
 
@@ -23,9 +25,18 @@ public class WufooListener extends AbstractRoute {
     /**
      * A generic error handler (specific to this RouteBuilder)
      */
+
     onException(Exception.class)
+        .routeId("ConnectionExceptionRoute")
+        .handled(true)
+        .log(LoggingLevel.ERROR, "Connection Error")
         .maximumRedeliveries("{{camel.maximum_tries}}")
-        .log("Index Routing Error: ${routeId}");
+        .redeliveryDelay("{{camel.redelivery_delay}}")
+        .backOffMultiplier("{{camel.backOff_multiplier}}")
+        .useExponentialBackOff()
+        .maximumRedeliveryDelay("{{camel.maximum_redelivery_delay}}")
+        .log(LoggingLevel.DEBUG, "Rolling back!")
+        .to("direct:send_error_email");
 
     /**
      * Parse Request from WuFoo Web hooks and create hash map for SysAid Route
@@ -44,6 +55,17 @@ public class WufooListener extends AbstractRoute {
         .routeId("SysAidConnector")
         .process(new SysAidProcessor())
         .log("SysAid Request Created");
+
+    /****
+     * Send Email
+     */
+    from("direct:send_error_email")
+        .routeId("SendErrorEmail")
+        .log("Sending Email to SysAdmin")
+        .setHeader("subject", simple("Error in Creating SysAid Ticket Even after {{camel.maximum_tries}} retries."))
+        .setHeader("From", simple("{{email.from}}"))
+        .setHeader("To", simple("{{email.to}}"))
+        .to("{{email.uri}}");
 
   }
 

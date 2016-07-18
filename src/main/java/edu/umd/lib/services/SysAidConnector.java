@@ -188,6 +188,8 @@ public class SysAidConnector {
       HttpEntity entity = response.getEntity();
       String responseString = EntityUtils.toString(entity, "UTF-8");
 
+      log.debug("Response" + responseString);
+
       JSONObject json_result = new JSONObject(responseString);
       if (json_result.has("status") && json_result.getString("status").equalsIgnoreCase("401")) {
         throw new SysAidLoginException("Invalid User. Authentication Failed");

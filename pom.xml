@@ -137,6 +137,24 @@
 
   <build>
     <defaultGoal>install</defaultGoal>
+    
+    <!-- Enable filtering to have the version properties in features.xml set by maven. -->
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>true</filtering>
+        <includes>
+          <include>**/features.xml</include>
+        </includes>
+      </resource>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>false</filtering>
+        <excludes>
+          <exclude>**/features.xml</exclude>
+        </excludes>
+      </resource>
+    </resources>
 
     <plugins>
       <plugin>
@@ -195,8 +213,9 @@
             <configuration>
               <artifacts>
                 <artifact>
-                  <file>target/classes/features.xml</file>
+                  <file>${project.build.outputDirectory}/features.xml</file>
                   <type>xml</type>
+                  <classifier>features</classifier>
                 </artifact>
               </artifacts>
             </configuration>

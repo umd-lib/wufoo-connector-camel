@@ -43,7 +43,7 @@ public class WufooProcessor implements Processor {
    * handshake key from the properties file
    */
   public WufooProcessor() {
-    this.loadConfiguration("configuration.properties");
+    this.loadConfiguration("edu.umd.lib.wufoo-connector-camel.cfg");
   }
 
   /***

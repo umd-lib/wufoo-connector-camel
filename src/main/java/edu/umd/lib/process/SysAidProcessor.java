@@ -1,6 +1,5 @@
 package edu.umd.lib.process;
 
-
 import java.util.HashMap;
 
 import org.apache.camel.Exchange;
@@ -15,21 +14,30 @@ import edu.umd.lib.services.SysAidConnector;
  * configuration file to map to SysAid field and then processed to create a
  * service request
  * <p>
+ *
  * @since 1.0
  */
 public class SysAidProcessor implements Processor {
-	
-    private static Logger log = Logger.getLogger(SysAidProcessor.class);
 
- 
+  private static Logger log = Logger.getLogger(SysAidProcessor.class);
+
   @SuppressWarnings("unchecked")
   @Override
   public void process(Exchange exchange) throws Exception {
 
-	  log.info("Processing a request to SysAid");
-	  HashMap<String, String> message = exchange.getIn().getBody(HashMap.class);
-	  SysAidConnector sysaid = new SysAidConnector();
-	  sysaid.createServiceRequest(message);
+    log.info("Processing a request to SysAid");
+    HashMap<String, String> message = exchange.getIn().getBody(HashMap.class);
+    SysAidConnector sysaid = new SysAidConnector();
+
+    String formMappingProperties = sysaid.getConfigProperty("wufoo." + message.get("FormName") + ".mapping");
+    log.info("Property File Name" + formMappingProperties);
+
+    if (!formMappingProperties.equalsIgnoreCase("")) {
+      sysaid.createServiceRequest(message, formMappingProperties);
+    } else {
+      log.error("No Mapping found for the form");
+    }
+
   }
 
 }

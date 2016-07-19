@@ -47,6 +47,7 @@ public class SysAidConnector {
   private String sysaid_Username;
   private String sysaid_Password;
   private String session_id;
+  Properties Config_properties = new Properties();
 
   private HashMap<String, HashMap<String, String>> dropdownList = new HashMap<String, HashMap<String, String>>();
   HashMap<String, String> configuration = new HashMap<String, String>();
@@ -85,21 +86,21 @@ public class SysAidConnector {
 
   /***
    * Default Constructor, While creating an object the configuration for SysAid
-   * is loaded to the object and the field mapping configuration is also loaded.
-   * Using the credentials from the configuration settings user is validated. If
-   * validation fails custom exceptions is thrown since further connection with
-   * SysAid is not possible.
+   * is loaded to the object. Using the credentials from the configuration
+   * settings user is validated. If validation fails custom exceptions is thrown
+   * since further connection with SysAid is not possible.
    * <p>
    * After authenticating the user all the list from SysAid is populated so that
    * it can be used for further request
    *
    * @throws SysAidLoginException
    */
+
   public SysAidConnector() throws SysAidLoginException {
     this.loadConfiguration("edu.umd.lib.wufoo-connector-camel.cfg");
-    this.wufooSysaidMapping("Wufoo-Sysaid-Mapping.properties");
     this.authenticate();
     this.getAllList();
+
   }
 
   /***
@@ -116,7 +117,6 @@ public class SysAidConnector {
   public SysAidConnector(String session_id) {
     this.session_id = session_id;
     this.loadConfiguration("edu.umd.lib.wufoo-connector-camel.cfg");
-    this.wufooSysaidMapping("Wufoo-Sysaid-Mapping.properties");
     this.getAllList();
   }
 
@@ -128,19 +128,40 @@ public class SysAidConnector {
    */
   public void loadConfiguration(String resourceName) {
 
-    Properties properties = new Properties();
     ClassLoader loader = Thread.currentThread().getContextClassLoader();
-    try (InputStream resourceStream = loader.getResourceAsStream(resourceName)) {
-
-      properties.load(resourceStream);
-      this.sysaid_URL = properties.getProperty("SysAid.url");
-      this.sysaid_Username = properties.getProperty("SysAid.userName");
-      this.sysaid_Password = properties.getProperty("SysAid.password");
+    InputStream resourceStream = null;
+    try {
+      resourceStream = loader.getResourceAsStream(resourceName);
+      Config_properties.load(resourceStream);
+      this.sysaid_URL = Config_properties.getProperty("SysAid.url");
+      this.sysaid_Username = Config_properties.getProperty("SysAid.userName");
+      this.sysaid_Password = Config_properties.getProperty("SysAid.password");
 
     } catch (IOException e) {
-      log.error("IOException occured while attempting to "
-          + "execute POST request. Authentication Failed ", e);
+      log.error("IOException occured while attempting access Resource Stream ", e);
+    } finally {
+      try {
+        resourceStream.close();
+      } catch (IOException e) {
+        log.error("Unable to Close the ResourceStream ", e);
+      }
     }
+  }
+
+  /***
+   * Get properties with Key
+   *
+   * @param PropertyName
+   * @return
+   */
+  public String getConfigProperty(String PropertyName) {
+    if (Config_properties.containsKey(PropertyName)) {
+      return Config_properties.getProperty(PropertyName);
+    } else {
+      log.info("Key Not found");
+      return "";
+    }
+
   }
 
   /***
@@ -188,7 +209,7 @@ public class SysAidConnector {
       HttpEntity entity = response.getEntity();
       String responseString = EntityUtils.toString(entity, "UTF-8");
 
-      log.debug("Response" + responseString);
+      // log.info("Response>>" + responseString);
 
       JSONObject json_result = new JSONObject(responseString);
       if (json_result.has("status") && json_result.getString("status").equalsIgnoreCase("401")) {
@@ -254,11 +275,16 @@ public class SysAidConnector {
    *
    * @return ServiceRequest_ID
    */
-  public String createServiceRequest(HashMap<String, String> values) {
+  public String createServiceRequest(HashMap<String, String> values, String resourceName) {
+
+    this.wufooSysaidMapping(resourceName);
 
     try {
       JSONObject infoFields = new JSONObject();
-      infoFields.put("info", this.convertMaptoJSON(fieldMapping(values)));
+
+      HashMap<String, String> fieldMappings = fieldMapping(values);
+      JSONArray sysAidFields = this.convertMaptoJSON(fieldMappings);
+      infoFields.put("info", sysAidFields);
       HttpResponse response = this.postRequest(infoFields, this.sysaid_URL + "/sr");
       HttpEntity entity = response.getEntity();
       String responseString = EntityUtils.toString(entity, "UTF-8");
@@ -436,26 +462,44 @@ public class SysAidConnector {
     return "";
   }
 
+  /**
+   * Search the Hash map for a particular key under a list
+   */
+  public boolean isDropdownValueExist(String listKey, String value) {
+
+    if (dropdownList.containsKey(listKey)) {
+      HashMap<String, String> map = dropdownList.get(listKey);
+      for (Map.Entry<String, ?> entry : map.entrySet()) {
+        String Dropdown_value = (String) entry.getValue();// Value from WuFoo
+        if (Dropdown_value.equalsIgnoreCase(value)) {
+          return true;
+        }
+      }
+
+    }
+    return false;
+  }
+
   /****
    * Mapping WuFoo fields with SysAid fields
    *
    * @param values
    * @return
+   * @throws JSONException
    */
-  public HashMap<String, String> fieldMapping(HashMap<String, String> values) {
+  public HashMap<String, String> fieldMapping(HashMap<String, String> values) throws JSONException {
+
     HashMap<String, String> finalValues = new HashMap<String, String>();
 
-    // Finding mapping fields from configuration
+    // Finding mapping fields from WuFoo
     for (Map.Entry<String, ?> entry : values.entrySet()) {
 
       String wufoo_key = entry.getKey();// Field from WuFoo
       String value = (String) entry.getValue();// Value from WuFoo
 
-      if (configuration.containsKey(wufoo_key)) {
+      if (configuration.containsKey("field." + wufoo_key)) {
         // Check if there is mapping field in SysAid
-        String sysaid_field = configuration.get(wufoo_key);
-        // Get the mapping field from SysAid
-
+        String sysaid_field = configuration.get("field." + wufoo_key);
         if (dropdownList.containsKey(sysaid_field)) {
           // Check if the field has a mapping list
           value = getDropdownValues(sysaid_field, value);
@@ -473,6 +517,7 @@ public class SysAidConnector {
       }
 
     }
+
     return finalValues;
 
   }

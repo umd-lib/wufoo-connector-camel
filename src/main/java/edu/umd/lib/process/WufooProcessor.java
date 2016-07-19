@@ -58,18 +58,34 @@ public class WufooProcessor implements Processor {
   public void process(Exchange exchange) throws Exception {
 
     String message = exchange.getIn().getBody(String.class);
-    Map<String, List<String>> parameters = getQueryParams(message);
 
+    Map<String, List<String>> parameters = getQueryParams(message);
     checkHandshake(parameters);
+    String formName = getFormName(parameters.get("FormStructure"));
     Map<String, String> fields = getFields(parameters);
     JSONArray fieldsList = getFieldStructure(parameters.get("FieldStructure"), fields);
     HashMap<String, String> values = extractParameters(fieldsList);
+    values.put("FormName", formName);
 
     exchange.getOut().setBody(values);
     log.info("Total Number of Parameters from the request:" + parameters.size());
 
-    // SysAidConnector sysaid = new SysAidConnector();
-    // sysaid.createServiceRequest(values);
+  }
+
+  /****
+   * Get Form Name from the Wufoo Request
+   *
+   * @param formStructureArray
+   * @return
+   */
+  public String getFormName(List<String> formStructureArray) {
+    try {
+      JSONObject formStructure = new JSONObject(formStructureArray.get(0).toString());
+      return formStructure.getString("Name");
+    } catch (JSONException e) {
+      e.printStackTrace();
+    }
+    return "";
   }
 
   /***

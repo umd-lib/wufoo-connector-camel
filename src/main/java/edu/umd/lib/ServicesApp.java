@@ -13,7 +13,7 @@ public class ServicesApp {
     CamelContext context = new DefaultCamelContext();
 
     PropertiesComponent propertiesComponent = context.getComponent("properties", PropertiesComponent.class);
-    propertiesComponent.setLocation("classpath:configuration.properties");
+    propertiesComponent.setLocation("classpath:edu.umd.lib.wufoo-connector-camel.cfg");
     propertiesComponent.setSystemPropertiesMode(PropertiesComponent.SYSTEM_PROPERTIES_MODE_OVERRIDE);
     context.addRoutes(new WufooListener());
 

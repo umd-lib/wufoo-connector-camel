@@ -47,10 +47,11 @@ public class SysAidConnector {
   private String sysaid_Username;
   private String sysaid_Password;
   private String session_id;
+
   Properties Config_properties = new Properties();
+  HashMap<String, String> configuration = new HashMap<String, String>();
 
   private HashMap<String, HashMap<String, String>> dropdownList = new HashMap<String, HashMap<String, String>>();
-  HashMap<String, String> configuration = new HashMap<String, String>();
 
   public String getSysaid_URL() {
     return sysaid_URL;
@@ -90,8 +91,8 @@ public class SysAidConnector {
    * settings user is validated. If validation fails custom exceptions is thrown
    * since further connection with SysAid is not possible.
    * <p>
-   * After authenticating the user all the list from SysAid is populated so that
-   * it can be used for further request
+   * After authenticating the user all the Drop down list from SysAid is
+   * populated so that it can be used for further request
    *
    * @throws SysAidLoginException
    */
@@ -99,7 +100,7 @@ public class SysAidConnector {
   public SysAidConnector() throws SysAidLoginException {
     this.loadConfiguration("edu.umd.lib.wufoo-connector-camel.cfg");
     this.authenticate();
-    this.getAllList();
+    this.getAllDropDownList();
 
   }
 
@@ -109,19 +110,19 @@ public class SysAidConnector {
    * If a session is already created use the same session id instead of creating
    * a new session.
    * <p>
-   * After authenticating the user all the list from SysAid is populated so that
-   * it can be used for further request
+   * After authenticating the user all the drop down list from SysAid is
+   * populated so that it can be used for further request
    *
    * @throws SysAidLoginException
    */
   public SysAidConnector(String session_id) {
     this.session_id = session_id;
     this.loadConfiguration("edu.umd.lib.wufoo-connector-camel.cfg");
-    this.getAllList();
+    this.getAllDropDownList();
   }
 
   /***
-   * Method to load the configuration from properties file
+   * Method to load the configuration Setting from Configuration file
    *
    * @param resourceName
    *          properties file name
@@ -130,7 +131,9 @@ public class SysAidConnector {
 
     ClassLoader loader = Thread.currentThread().getContextClassLoader();
     InputStream resourceStream = null;
+
     try {
+
       resourceStream = loader.getResourceAsStream(resourceName);
       Config_properties.load(resourceStream);
       this.sysaid_URL = Config_properties.getProperty("SysAid.url");
@@ -138,18 +141,22 @@ public class SysAidConnector {
       this.sysaid_Password = Config_properties.getProperty("SysAid.password");
 
     } catch (IOException e) {
-      log.error("IOException occured while attempting access Resource Stream ", e);
+      log.error("IOException occured in Method : loadConfiguration of Class :SysAidConnector.java"
+          + "  while attempting access Resource Stream ", e);
     } finally {
       try {
         resourceStream.close();
       } catch (IOException e) {
-        log.error("Unable to Close the ResourceStream ", e);
+        log.error("IOException occured in Method : loadConfiguration of Class :SysAidConnector.java"
+            + "  while attempting to close the Resource Stream ", e);
       }
     }
   }
 
   /***
-   * Get properties with Key
+   * Get Configuration Properties from the Loaded Configuration Properties
+   * object, Property Name is passed as parameter and corresponding value is
+   * returned
    *
    * @param PropertyName
    * @return
@@ -158,7 +165,8 @@ public class SysAidConnector {
     if (Config_properties.containsKey(PropertyName)) {
       return Config_properties.getProperty(PropertyName);
     } else {
-      log.info("Key Not found");
+      log.info("Property with Name: " + PropertyName
+          + " not found in the Configuration file, Verify the Configuration File ");
       return "";
     }
 
@@ -171,12 +179,13 @@ public class SysAidConnector {
    * @param resourceName
    *          properties file name
    */
-  public void wufooSysaidMapping(String resourceName) {
+  public void LoadWufooSysaidMapping(String resourceName) {
 
     Properties properties = new Properties();
     ClassLoader loader = Thread.currentThread().getContextClassLoader();
-    try (InputStream resourceStream = loader.getResourceAsStream(resourceName)) {
-
+    InputStream resourceStream = null;
+    try {
+      resourceStream = loader.getResourceAsStream(resourceName);
       properties.load(resourceStream);
       Set<Object> keys = properties.keySet();
       for (Object k : keys) {
@@ -185,8 +194,15 @@ public class SysAidConnector {
       }
 
     } catch (IOException e) {
-      log.error("IOException occured while attempting to "
-          + "execute POST request. Authentication Failed ", e);
+      log.error("IOException occured in Method : LoadwufooSysaidMapping of Class :SysAidConnector.java"
+          + "  while attempting access Resource Stream ", e);
+    } finally {
+      try {
+        resourceStream.close();
+      } catch (IOException e) {
+        log.error("IOException occured in Method : LoadwufooSysaidMapping of Class :SysAidConnector.java"
+            + "  while attempting to close the Resource Stream ", e);
+      }
     }
   }
 
@@ -208,8 +224,6 @@ public class SysAidConnector {
       HttpResponse response = this.postRequest(loginCredentials, this.sysaid_URL + "login");
       HttpEntity entity = response.getEntity();
       String responseString = EntityUtils.toString(entity, "UTF-8");
-
-      // log.info("Response>>" + responseString);
 
       JSONObject json_result = new JSONObject(responseString);
       if (json_result.has("status") && json_result.getString("status").equalsIgnoreCase("401")) {
@@ -253,22 +267,6 @@ public class SysAidConnector {
   }
 
   /***
-   * Dummy Data for testing purpose
-   */
-  public HashMap<String, String> testData() {
-
-    HashMap<String, String> fields = new HashMap<String, String>();
-    fields.put("due_date", "1461384000000");
-    fields.put("status", "5");
-    fields.put("priority", "1");
-    fields.put("description", "This is created from Rest API");
-    fields.put("responsibility", "1222");
-    fields.put("request_user", "1222");
-    fields.put("title", " created from Rest api");
-    return fields;
-  }
-
-  /***
    * Create Service Request in SysAid using the value map sent from WuFoo. The
    * map is compared with the field mapping map and converted to the fields
    * SysAid expects and sent to SysAid as JSON info parameters
@@ -277,19 +275,23 @@ public class SysAidConnector {
    */
   public String createServiceRequest(HashMap<String, String> values, String resourceName) {
 
-    this.wufooSysaidMapping(resourceName);
+    this.LoadWufooSysaidMapping(resourceName);
 
     try {
+
       JSONObject infoFields = new JSONObject();
 
       HashMap<String, String> fieldMappings = fieldMapping(values);
-      JSONArray sysAidFields = this.convertMaptoJSON(fieldMappings);
-      infoFields.put("info", sysAidFields);
+      JSONArray sysAidFieldsinfo = this.convertMaptoJSON(fieldMappings);
+
+      infoFields.put("info", sysAidFieldsinfo);
       HttpResponse response = this.postRequest(infoFields, this.sysaid_URL + "/sr");
       HttpEntity entity = response.getEntity();
+
       String responseString = EntityUtils.toString(entity, "UTF-8");
       JSONObject json_result = new JSONObject(responseString);
       log.info("Service Request Created, ID:" + json_result.getString("id"));
+
       return json_result.getString("id");
 
     } catch (JSONException e) {
@@ -301,8 +303,8 @@ public class SysAidConnector {
           + "execute POST request.", e);
       return null;
     } catch (IOException e) {
-      log.error("IOException occured while attempting to "
-          + "execute POST request.", e);
+      log.error(
+          "IOException occured while attempting to " + "execute POST request.", e);
       return null;
     }
 
@@ -395,7 +397,7 @@ public class SysAidConnector {
    * the numerical value for many fields and this list will be used to get the
    * numerical value for the corresponding text value for each field
    */
-  public void getAllList() {
+  public void getAllDropDownList() {
     HttpResponse response = this.getRequest(this.sysaid_URL + "list");
     HttpEntity entity = response.getEntity();
     String responseString;
@@ -481,7 +483,8 @@ public class SysAidConnector {
   }
 
   /****
-   * Mapping WuFoo fields with SysAid fields
+   * Mapping WuFoo fields with SysAid fields based on the mapping specified in
+   * the mapping configuration.
    *
    * @param values
    * @return
@@ -491,33 +494,94 @@ public class SysAidConnector {
 
     HashMap<String, String> finalValues = new HashMap<String, String>();
 
-    // Finding mapping fields from WuFoo
-    for (Map.Entry<String, ?> entry : values.entrySet()) {
+    String wufooFieldsProperty = configuration.get("wufoo.fields");
+    String[] wufooFields = wufooFieldsProperty.split(",");
 
-      String wufoo_key = entry.getKey();// Field from WuFoo
-      String value = (String) entry.getValue();// Value from WuFoo
+    String sysAidDefaultField = configuration.get("SysAid.DefaultField");
 
-      if (configuration.containsKey("field." + wufoo_key)) {
-        // Check if there is mapping field in SysAid
-        String sysaid_field = configuration.get("field." + wufoo_key);
-        if (dropdownList.containsKey(sysaid_field)) {
-          // Check if the field has a mapping list
-          value = getDropdownValues(sysaid_field, value);
-          // replace WuFoo value with mapping value from drop down
+    // From the List of WuFoo Fields from mapping file,
+    // Map the field to SysAid fields using the Mapping Configuration
+    for (String wufooField : wufooFields) {
+
+      String sysAidField = configuration.get(wufooField + ".fieldMapping");
+      String sysAidFieldType = configuration.get(wufooField + ".fieldType");
+
+      // If the SysAidFieldType is Drop down Loop find the actual value from the
+      // list of drop down values already loaded
+      if (sysAidFieldType.equalsIgnoreCase("Dropdown")) {
+
+        if (dropdownList.containsKey(sysAidField)) {
+          String dropdownValue = getDropdownValues(sysAidField, values.get(wufooField));
+          finalValues.put(sysAidField, dropdownValue);
         }
-        // Check if the field has already been added if added append to the
-        // Existing values
-        if (finalValues.containsKey(sysaid_field)) {
-          String current_value = finalValues.get(sysaid_field);
-          current_value = current_value + "\n" + value;
-          finalValues.put(sysaid_field, current_value);
+
+        // If the SysAidFieldType is User Drop down Loop find the actual value
+        // by passing the field key to the List of User loaded into cache to get
+        // the User ID
+      } else if (sysAidFieldType.equalsIgnoreCase("UserDropdown")) {
+
+        String wufoofieldKey = configuration.get(wufooField + ".fieldKey");
+        JSONObject userObject = SysAidUsers.getInstance().getUserbyKey(wufoofieldKey, values.get(wufooField));
+
+        if (userObject != null) {
+          finalValues.put(sysAidField, userObject.getString("id"));
+        }
+
+      } else {
+        // If the SysAidFieldType is Text Check if the field is a Default field.
+        // If its a default field append the values, if not overwrite the values
+        // in the field.
+        if (sysAidDefaultField.equalsIgnoreCase(sysAidField)) {
+
+          if (finalValues.containsKey(sysAidField)) {
+
+            String current_value = finalValues.get(sysAidField);
+            String value = wufooField + " : " + values.get(wufooField);
+            current_value = current_value + "\n" + value;
+            finalValues.put(sysAidField, current_value);
+
+          } else {
+            String value = wufooField + " : " + values.get(wufooField);
+            finalValues.put(sysAidField, value);
+          }
+
         } else {
-          finalValues.put(sysaid_field, value);
+          finalValues.put(sysAidField, values.get(wufooField));
+        }
+
+      }
+    }
+
+    // From the List of SysAid Fields from mapping file
+    // Verify and Populate defaults specified in the Mapping file
+    String sysAidFieldsProperty = configuration.get("SysAid.fields");
+    String[] sysAidFields = sysAidFieldsProperty.split(",");
+
+    for (String sysAidField : sysAidFields) {
+
+      // If the SysAid Field already has mapping value check if the mapping
+      // value is not empty if empty populate the field with default value
+      // specified
+      if (finalValues.containsKey(sysAidField)) {
+
+        if (finalValues.get(sysAidField).toString().equalsIgnoreCase("")) {
+          if (configuration.containsKey("SysAid.Defaults." + sysAidField)) {
+            finalValues.put(sysAidField, configuration.get("SysAid.Defaults." + sysAidField));
+          }
+        }
+
+        // If the SysAid field is not mapped use the defaults value to map to
+        // the sysAid field
+      } else {
+
+        if (configuration.containsKey("SysAid.Defaults." + sysAidField)) {
+          finalValues.put(sysAidField, configuration.get("SysAid.Defaults." + sysAidField));
         }
       }
 
     }
 
+    // Return the Mapped SysAid field and Values
     return finalValues;
 
   }
@@ -545,13 +609,29 @@ public class SysAidConnector {
 
     try {
       SysAidConnector sysaid = new SysAidConnector();
-      sysaid.getAllList();
+      sysaid.getAllDropDownList();
       // sysaid.createServiceRequest();
     } catch (SysAidLoginException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
     }
 
+  }
+
+  /***
+   * Dummy Data for testing purpose
+   */
+  public HashMap<String, String> testData() {
+
+    HashMap<String, String> fields = new HashMap<String, String>();
+    fields.put("due_date", "1461384000000");
+    fields.put("status", "5");
+    fields.put("priority", "1");
+    fields.put("description", "This is created from Rest API");
+    fields.put("responsibility", "1222");
+    fields.put("request_user", "1222");
+    fields.put("title", " created from Rest api");
+    return fields;
   }
 
   /**

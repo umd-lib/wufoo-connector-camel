@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:cm="http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0"
+       xsi:schemaLocation="
+       http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0 http://aries.apache.org/schemas/blueprint-cm/blueprint-cm-1.1.0.xsd
+       http://www.osgi.org/xmlns/blueprint/v1.0.0 http://www.osgi.org/xmlns/blueprint/v1.0.0/blueprint.xsd
+       http://camel.apache.org/schema/blueprint http://camel.apache.org/schema/blueprint/camel-blueprint.xsd">
+   
+  <!-- OSGI blueprint property placeholder -->
+  <cm:property-placeholder id="properties" persistent-id="edu.umd.lib.wufooconnectorcamel" update-strategy="reload">
+    <cm:default-properties>
+      <cm:property name="default.domain" value="http://localhost:8080/"/>
+      <cm:property name="default.routeName" value="route"/>
+      <cm:property name="default.serviceName" value="serviceName"/>
+      <cm:property name="wufoo.routeName" value="wufoo"/>
+      <cm:property name="wufoo.serviceName" value="wufoo-listener"/>
+      <cm:property name="wufoo.handshake_key" value=""/>
+      <cm:property name="SysAid.serviceName" value="wufoo-listener"/>
+      <cm:property name="SysAid.url" value=""/>
+      <cm:property name="SysAid.userName" value=""/>
+      <cm:property name="SysAid.password" value=""/>
+      <cm:property name="camel.maximum_tries" value="3"/>
+      <cm:property name="camel.redelivery_delay" value="1000"/>
+      <cm:property name="camel.backOff_multiplier" value="2"/>
+      <cm:property name="camel.maximum_redelivery_delay" value="6000"/>
+      <cm:property name="email.from" value=""/>
+      <cm:property name="email.to" value=""/>
+      <cm:property name="email.uri" value=""/>
+    </cm:default-properties>
+  </cm:property-placeholder> 
+
+  <bean id="smtp" class="org.apache.camel.component.mail.MailComponent"/>
+
+  <camelContext id="WufooConnectorCamel" xmlns="http://camel.apache.org/schema/blueprint">
+    <package>edu.umd.lib</package>
+  </camelContext>
+
+</blueprint>

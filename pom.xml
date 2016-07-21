@@ -217,6 +217,11 @@
                   <type>xml</type>
                   <classifier>features</classifier>
                 </artifact>
+                <artifact>
+                  <file>${project.build.outputDirectory}/edu.umd.lib.wufooconnectorcamel.cfg</file>
+                  <type>cfg</type>
+                  <classifier>configuration</classifier>
+                </artifact>
               </artifacts>
             </configuration>
           </execution>

@@ -96,7 +96,7 @@ public class SysAidConnector {
    * @throws SysAidLoginException
    */
   public SysAidConnector() throws SysAidLoginException {
-    this.loadConfiguration("edu.umd.lib.wufoo-connector-camel.cfg");
+    this.loadConfiguration("edu.umd.lib.wufooconnectorcamel.cfg");
     this.wufooSysaidMapping("Wufoo-Sysaid-Mapping.properties");
     this.authenticate();
     this.getAllList();
@@ -115,7 +115,7 @@ public class SysAidConnector {
    */
   public SysAidConnector(String session_id) {
     this.session_id = session_id;
-    this.loadConfiguration("edu.umd.lib.wufoo-connector-camel.cfg");
+    this.loadConfiguration("edu.umd.lib.wufooconnectorcamel.cfg");
     this.wufooSysaidMapping("Wufoo-Sysaid-Mapping.properties");
     this.getAllList();
   }

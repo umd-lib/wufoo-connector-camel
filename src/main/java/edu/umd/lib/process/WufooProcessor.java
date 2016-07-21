@@ -57,18 +57,23 @@ public class WufooProcessor implements Processor {
   @Override
   public void process(Exchange exchange) throws Exception {
 
-    String message = exchange.getIn().getBody(String.class);
+    try {
 
-    Map<String, List<String>> parameters = getQueryParams(message);
-    checkHandshake(parameters);
-    String formName = getFormName(parameters.get("FormStructure"));
-    Map<String, String> fields = getFields(parameters);
-    JSONArray fieldsList = getFieldStructure(parameters.get("FieldStructure"), fields);
-    HashMap<String, String> values = extractParameters(fieldsList);
-    values.put("FormName", formName);
+      String message = exchange.getIn().getBody(String.class);
 
-    exchange.getOut().setBody(values);
-    log.info("Total Number of Parameters from the request:" + parameters.size());
+      Map<String, List<String>> parameters = getQueryParams(message);
+      checkHandshake(parameters);
+      String formName = getFormName(parameters.get("FormStructure"));
+      Map<String, String> fields = getFields(parameters);
+      JSONArray fieldsList = getFieldStructure(parameters.get("FieldStructure"), fields);
+      HashMap<String, String> values = extractParameters(fieldsList);
+      values.put("FormName", formName);
+
+      exchange.getOut().setBody(values);
+      log.info("Total Number of Parameters from the request:" + parameters.size());
+    } catch (Exception e) {
+
+    }
 
   }
 

@@ -12,7 +12,7 @@ public abstract class AbstractRoute extends SpringRouteBuilder {
   /**
    * The name of this route
    */
-  private String name = "{{default.routeName}}";
+  private String name = "{{default.routename}}";
   /**
    * The endpoint exposed by Camel
    */
@@ -20,7 +20,7 @@ public abstract class AbstractRoute extends SpringRouteBuilder {
   /**
    * The service name as defined in the respective properties file.
    */
-  private String serviceName = "{{default.serviceName}}";
+  private String serviceName = "{{default.servicename}}";
 
   @Override
   public void configure() throws Exception {

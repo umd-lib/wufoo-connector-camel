@@ -136,9 +136,9 @@ public class SysAidConnector {
 
       resourceStream = loader.getResourceAsStream(resourceName);
       Config_properties.load(resourceStream);
-      this.sysaid_URL = Config_properties.getProperty("SysAid.url");
-      this.sysaid_Username = Config_properties.getProperty("SysAid.userName");
-      this.sysaid_Password = Config_properties.getProperty("SysAid.password");
+      this.sysaid_URL = Config_properties.getProperty("sysaid.url");
+      this.sysaid_Username = Config_properties.getProperty("sysaid.username");
+      this.sysaid_Password = Config_properties.getProperty("sysaid.password");
 
     } catch (IOException e) {
       log.error("IOException occured in Method : loadConfiguration of Class :SysAidConnector.java"
@@ -497,14 +497,14 @@ public class SysAidConnector {
     String wufooFieldsProperty = configuration.get("wufoo.fields");
     String[] wufooFields = wufooFieldsProperty.split(",");
 
-    String sysAidDefaultField = configuration.get("SysAid.DefaultField");
+    String sysAidDefaultField = configuration.get("sysaid.defaultfield");
 
     // From the List of WuFoo Fields from mapping file,
     // Map the field to SysAid fields using the Mapping Configuration
     for (String wufooField : wufooFields) {
 
-      String sysAidField = configuration.get(wufooField + ".fieldMapping");
-      String sysAidFieldType = configuration.get(wufooField + ".fieldType");
+      String sysAidField = configuration.get(wufooField + ".fieldmapping");
+      String sysAidFieldType = configuration.get(wufooField + ".fieldtype");
 
       // If the SysAidFieldType is Drop down Loop find the actual value from the
       // list of drop down values already loaded
@@ -520,7 +520,7 @@ public class SysAidConnector {
         // the User ID
       } else if (sysAidFieldType.equalsIgnoreCase("UserDropdown")) {
 
-        String wufoofieldKey = configuration.get(wufooField + ".fieldKey");
+        String wufoofieldKey = configuration.get(wufooField + ".fieldkey");
         JSONObject userObject = SysAidUsers.getInstance().getUserbyKey(wufoofieldKey, values.get(wufooField));
 
         if (userObject != null) {
@@ -554,7 +554,7 @@ public class SysAidConnector {
 
     // From the List of SysAid Fields from mapping file
     // Verify and Populate defaults specified in the Mapping file
-    String sysAidFieldsProperty = configuration.get("SysAid.fields");
+    String sysAidFieldsProperty = configuration.get("sysaid.fields");
     String[] sysAidFields = sysAidFieldsProperty.split(",");
 
     for (String sysAidField : sysAidFields) {
@@ -565,8 +565,8 @@ public class SysAidConnector {
       if (finalValues.containsKey(sysAidField)) {
 
         if (finalValues.get(sysAidField).toString().equalsIgnoreCase("")) {
-          if (configuration.containsKey("SysAid.Defaults." + sysAidField)) {
-            finalValues.put(sysAidField, configuration.get("SysAid.Defaults." + sysAidField));
+          if (configuration.containsKey("sysaid.defaults." + sysAidField)) {
+            finalValues.put(sysAidField, configuration.get("sysaid.defaults." + sysAidField));
           }
         }
 
@@ -574,8 +574,8 @@ public class SysAidConnector {
         // the sysAid field
       } else {
 
-        if (configuration.containsKey("SysAid.Defaults." + sysAidField)) {
-          finalValues.put(sysAidField, configuration.get("SysAid.Defaults." + sysAidField));
+        if (configuration.containsKey("sysaid.defaults." + sysAidField)) {
+          finalValues.put(sysAidField, configuration.get("sysaid.defaults." + sysAidField));
         }
       }
 

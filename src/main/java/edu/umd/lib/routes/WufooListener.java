@@ -13,9 +13,9 @@ public class WufooListener extends AbstractRoute {
    */
   public WufooListener() {
     // sets the name of this bean
-    this.setName("{{wufoo.routeName}}");
+    this.setName("{{wufoo.routename}}");
     // defines the service-name as set in the properties file
-    this.setServiceName("{{wufoo.serviceName}}");
+    this.setServiceName("{{wufoo.servicename}}");
 
   }
 
@@ -32,7 +32,7 @@ public class WufooListener extends AbstractRoute {
         .log(LoggingLevel.ERROR, "Connection Error")
         .maximumRedeliveries("{{camel.maximum_tries}}")
         .redeliveryDelay("{{camel.redelivery_delay}}")
-        .backOffMultiplier("{{camel.backOff_multiplier}}")
+        .backOffMultiplier("{{camel.backoff_multiplier}}")
         .useExponentialBackOff()
         .maximumRedeliveryDelay("{{camel.maximum_redelivery_delay}}")
         .log(LoggingLevel.DEBUG, "Rolling back!")
@@ -45,13 +45,13 @@ public class WufooListener extends AbstractRoute {
         .routeId("WufooListener")
         .process(new WufooProcessor())
         .log("Wufoo Process Completed")
-        .to("direct:connect.SysAid");
+        .to("direct:connect.sysaid");
 
     /**
      * Connect to SysAid and create Service Request. All the Request to SysAid
      * is processed under one route Since SysAid works on Session
      */
-    from("direct:connect.SysAid")
+    from("direct:connect.sysaid")
         .routeId("SysAidConnector")
         .process(new SysAidProcessor())
         .log("SysAid Request Created");

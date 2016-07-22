@@ -20,6 +20,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import edu.umd.lib.exception.CamelHandShakeException;
+
 /**
  * WufooProcessor process the request from WuFoo by parsing the request then
  * creating a Hash map of fields and values from the form. The map is then
@@ -58,18 +60,34 @@ public class WufooProcessor implements Processor {
   public void process(Exchange exchange) throws Exception {
 
     String message = exchange.getIn().getBody(String.class);
-    Map<String, List<String>> parameters = getQueryParams(message);
 
+    Map<String, List<String>> parameters = getQueryParams(message);
     checkHandshake(parameters);
+    String formName = getFormName(parameters.get("FormStructure"));
     Map<String, String> fields = getFields(parameters);
     JSONArray fieldsList = getFieldStructure(parameters.get("FieldStructure"), fields);
     HashMap<String, String> values = extractParameters(fieldsList);
+    values.put("FormName", formName);
 
     exchange.getOut().setBody(values);
     log.info("Total Number of Parameters from the request:" + parameters.size());
 
-    // SysAidConnector sysaid = new SysAidConnector();
-    // sysaid.createServiceRequest(values);
+  }
+
+  /****
+   * Get Form Name from the Wufoo Request
+   *
+   * @param formStructureArray
+   * @return
+   */
+  public String getFormName(List<String> formStructureArray) {
+    try {
+      JSONObject formStructure = new JSONObject(formStructureArray.get(0).toString());
+      return formStructure.getString("Name");
+    } catch (JSONException e) {
+      e.printStackTrace();
+    }
+    return "";
   }
 
   /***
@@ -118,8 +136,7 @@ public class WufooProcessor implements Processor {
   public void checkHandshake(Map<String, List<String>> parameters) throws CamelHandShakeException {
 
     String handshake = parameters.get("HandshakeKey").get(0);
-    log.info("Wufoo handshake:" + handshake);
-    log.info("camel handshake:" + handShakeKey);
+    log.info("Wufoo handshake and Camel HandShake Key Matches");
     if (handshake == null) {
       throw new CamelHandShakeException("Wufoo Handshake key is empty.");
     } else if (this.handShakeKey == null) {
@@ -258,22 +275,6 @@ public class WufooProcessor implements Processor {
     } catch (IOException e) {
       log.error("IOException occured while attempting to "
           + "execute POST request. Authentication Failed ", e);
-    }
-  }
-
-  /***
-   * Custom Exception to check if the request is valid request from WuFoo
-   */
-  class CamelHandShakeException extends Exception {
-
-    private static final long serialVersionUID = 1L;
-
-    public CamelHandShakeException() {
-    }
-
-    // Constructor that accepts a message
-    public CamelHandShakeException(String message) {
-      super(message);
     }
   }
 

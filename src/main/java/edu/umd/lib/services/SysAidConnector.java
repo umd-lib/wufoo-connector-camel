@@ -27,6 +27,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import edu.umd.lib.exception.SysAidLoginException;
+
 /**
  * SysAidConnector connects to SysAid using Login credentials from Configuration
  * file. The fields required to create service request is mapped to a
@@ -233,13 +235,13 @@ public class SysAidConnector {
 
     } catch (JSONException e) {
       log.error("JSONException occured while attempting to "
-          + "execute POST request. Authentication Failed ", e);
+          + "authenticate SysAid Login. Authentication Failed ", e);
     } catch (ParseException e) {
       log.error("ParseException occured while attempting to "
-          + "execute POST request. Authentication Failed ", e);
+          + "authenticate SysAid Login. Authentication Failed ", e);
     } catch (IOException e) {
       log.error("IOException occured while attempting to "
-          + "execute POST request. Authentication Failed ", e);
+          + "authenticate SysAid Login. Authentication Failed ", e);
     }
   }
 
@@ -296,15 +298,15 @@ public class SysAidConnector {
 
     } catch (JSONException e) {
       log.error("JSONException occured while attempting to "
-          + "execute POST request.", e);
+          + "create service request. Method:createServiceRequest.", e);
       return null;
     } catch (ParseException e) {
       log.error("ParseException occured while attempting to "
-          + "execute POST request.", e);
+          + "create service request. Method:createServiceRequest.", e);
       return null;
     } catch (IOException e) {
-      log.error(
-          "IOException occured while attempting to " + "execute POST request.", e);
+      log.error("IOException occured while attempting to"
+          + " create service request. Method:createServiceRequest", e);
       return null;
     }
 
@@ -373,19 +375,19 @@ public class SysAidConnector {
 
     } catch (UnsupportedEncodingException e) {
       log.error("UnsupportedEncodingException occured while attempting to "
-          + "execute POST request. Ensure the coding used is proper ", e);
+          + "execute GET request. Ensure the coding used is proper ", e);
       return null;
 
     } catch (ClientProtocolException e) {
       log.error("ClientProtocolException occured while attempting to "
-          + "execute POST request. Ensure this service is properly "
+          + "execute GET request. Ensure this service is properly "
           + "configured and that the server you are attempting to make "
           + "a request to is currently running.", e);
       return null;
 
     } catch (IOException e) {
       log.error("IOException occured while attempting to "
-          + "execute POST request.", e);
+          + "execute GET request.", e);
       return null;
 
     }
@@ -419,13 +421,13 @@ public class SysAidConnector {
       }
     } catch (JSONException e) {
       log.error("JSONException occured while attempting to "
-          + "execute POST request.", e);
+          + "populate Dropdown list.", e);
     } catch (ParseException e) {
       log.error("ParseException occured while attempting to "
-          + "execute POST request.", e);
+          + "populate Dropdown list.", e);
     } catch (IOException e) {
       log.error("IOException occured while attempting to "
-          + "execute POST request.", e);
+          + "populate Dropdown list.", e);
     }
   }
 
@@ -584,20 +586,6 @@ public class SysAidConnector {
     // Return the Mapped SysAid field and Values
     return finalValues;
 
-  }
-
-  /***
-   * Custom Exception when SysAid Authentication Fails
-   */
-  class SysAidLoginException extends Exception {
-    private static final long serialVersionUID = 1L;
-
-    public SysAidLoginException() {
-    }
-
-    public SysAidLoginException(String message) {
-      super(message);
-    }
   }
 
   /***

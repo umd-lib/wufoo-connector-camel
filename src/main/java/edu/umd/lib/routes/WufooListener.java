@@ -1,7 +1,6 @@
 package edu.umd.lib.routes;
 
-import org.apache.camel.LoggingLevel;
-
+import edu.umd.lib.process.ExceptionProcessor;
 import edu.umd.lib.process.SysAidProcessor;
 import edu.umd.lib.process.WufooProcessor;
 
@@ -27,15 +26,14 @@ public class WufooListener extends AbstractRoute {
      */
 
     onException(Exception.class)
-        .routeId("ConnectionExceptionRoute")
+        .routeId("ExceptionRoute")
+        .process(new ExceptionProcessor())
         .handled(true)
-        .log(LoggingLevel.ERROR, "Connection Error")
         .maximumRedeliveries("{{camel.maximum_tries}}")
         .redeliveryDelay("{{camel.redelivery_delay}}")
         .backOffMultiplier("{{camel.backoff_multiplier}}")
         .useExponentialBackOff()
         .maximumRedeliveryDelay("{{camel.maximum_redelivery_delay}}")
-        .log(LoggingLevel.DEBUG, "Rolling back!")
         .to("direct:send_error_email");
 
     /**
@@ -60,12 +58,17 @@ public class WufooListener extends AbstractRoute {
      * Send Email
      */
     from("direct:send_error_email")
+        .doTry()
         .routeId("SendErrorEmail")
         .log("Sending Email to SysAdmin")
-        .setHeader("subject", simple("Error in Creating SysAid Ticket Even after {{camel.maximum_tries}} retries."))
+        .setHeader("subject", simple(
+            "Exception Occured in Wufoo-SysAid Integration, Total Number of Attempts: {{camel.maximum_tries}} retries."))
         .setHeader("From", simple("{{email.from}}"))
         .setHeader("To", simple("{{email.to}}"))
-        .to("{{email.uri}}");
+        .to("{{email.uri}}")
+        .doCatch(Exception.class)
+        .log("Error Occurred While Sending Email to System Admin.")
+        .end();
 
   }
 

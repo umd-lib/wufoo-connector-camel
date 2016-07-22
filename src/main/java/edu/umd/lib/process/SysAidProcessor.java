@@ -6,6 +6,7 @@ import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.log4j.Logger;
 
+import edu.umd.lib.exception.FormMappingException;
 import edu.umd.lib.services.SysAidConnector;
 
 /**
@@ -30,12 +31,13 @@ public class SysAidProcessor implements Processor {
     SysAidConnector sysaid = new SysAidConnector();
 
     String formMappingProperties = sysaid.getConfigProperty("wufoo." + message.get("FormName") + ".mapping");
-    log.info("Property File Name" + formMappingProperties);
+    log.info("Property File Name :" + formMappingProperties);
 
     if (!formMappingProperties.equalsIgnoreCase("")) {
       sysaid.createServiceRequest(message, formMappingProperties);
     } else {
-      log.error("No Mapping found for the form");
+      log.error("Mapping file for the form:" + message.get("FormName") + " not found.");
+      throw new FormMappingException("Mapping file for the form:" + message.get("FormName") + " not found.");
     }
 
   }

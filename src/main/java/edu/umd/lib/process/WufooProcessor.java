@@ -63,11 +63,11 @@ public class WufooProcessor implements Processor {
 
       Map<String, List<String>> parameters = getQueryParams(message);
       checkHandshake(parameters);
-      String formName = getFormName(parameters.get("FormStructure"));
+      String formName = getHashvalue(parameters.get("FormStructure"));
       Map<String, String> fields = getFields(parameters);
       JSONArray fieldsList = getFieldStructure(parameters.get("FieldStructure"), fields);
       HashMap<String, String> values = extractParameters(fieldsList);
-      values.put("FormName", formName);
+      values.put("Hash", formName);
 
       exchange.getOut().setBody(values);
       log.info("Total Number of Parameters from the request:" + parameters.size());
@@ -83,10 +83,10 @@ public class WufooProcessor implements Processor {
    * @param formStructureArray
    * @return
    */
-  public String getFormName(List<String> formStructureArray) {
+  public String getHashvalue(List<String> formStructureArray) {
     try {
       JSONObject formStructure = new JSONObject(formStructureArray.get(0).toString());
-      return formStructure.getString("Name");
+      return formStructure.getString("Hash");
     } catch (JSONException e) {
       e.printStackTrace();
     }

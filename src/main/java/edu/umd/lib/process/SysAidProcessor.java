@@ -25,17 +25,18 @@ public class SysAidProcessor implements Processor {
   @Override
   public void process(Exchange exchange) throws Exception {
 
-    log.info("Processing a request to SysAid");
+    log.info("Processing new request to SysAid");
     HashMap<String, String> message = exchange.getIn().getBody(HashMap.class);
     SysAidConnector sysaid = new SysAidConnector();
 
-    String formMappingProperties = sysaid.getConfigProperty("wufoo." + message.get("FormName") + ".mapping");
-    log.info("Property File Name" + formMappingProperties);
+    String formMappingProperties = sysaid.getConfigProperty("wufoo." + message.get("Hash") + ".mapping");
+    log.info("Property File Name :" + formMappingProperties);
 
     if (!formMappingProperties.equalsIgnoreCase("")) {
       sysaid.createServiceRequest(message, formMappingProperties);
     } else {
-      log.error("No Mapping found for the form");
+      log.error("Mapping file for the form:" + message.get("Hash") + " not found.");
+
     }
 
   }

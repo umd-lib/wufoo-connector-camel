@@ -292,7 +292,7 @@ public class SysAidConnector {
 
       String responseString = EntityUtils.toString(entity, "UTF-8");
       JSONObject json_result = new JSONObject(responseString);
-      log.info("Service Request Created, ID:" + json_result.getString("id"));
+      log.info("Service Request Created in SysAid, ID:" + json_result.getString("id"));
 
       return json_result.getString("id");
 

@@ -69,9 +69,7 @@ public class WufooProcessor implements Processor {
     JSONArray fieldsList = getFieldStructure(parameters.get("FieldStructure"), fields);
     HashMap<String, String> values = extractParameters(fieldsList);
     values.put("Hash", formName);
-
     exchange.getOut().setBody(values);
-    log.info("Total Number of Parameters from the request:" + parameters.size());
 
   }
 
@@ -86,7 +84,8 @@ public class WufooProcessor implements Processor {
       JSONObject formStructure = new JSONObject(formStructureArray.get(0).toString());
       return formStructure.getString("Hash");
     } catch (JSONException e) {
-      e.printStackTrace();
+      log.error("JSONException occured while extracting form Name " +
+          ".", e);
     }
     return "";
   }
@@ -122,6 +121,8 @@ public class WufooProcessor implements Processor {
       return params;
 
     } catch (UnsupportedEncodingException ex) {
+      log.error("UnsupportedEncodingException occured while parsing query parameters " +
+          ".", ex);
       throw new AssertionError(ex);
     }
   }
@@ -252,7 +253,7 @@ public class WufooProcessor implements Processor {
       }
     } catch (JSONException e) {
       log.error("JSONException occured while attempting to "
-          + "execute POST request.", e);
+          + "Extract parameters from JSONArray.", e);
     }
     return paramaters;
   }
@@ -274,8 +275,8 @@ public class WufooProcessor implements Processor {
       this.handShakeKey = properties.getProperty("wufoo.handshake_key");
 
     } catch (IOException e) {
-      log.error("IOException occured while attempting to "
-          + "execute POST request. Authentication Failed ", e);
+      log.error("IOException occured while accessing the configuration file " +
+          resourceName + ".", e);
     }
   }
 

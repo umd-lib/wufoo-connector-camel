@@ -84,7 +84,7 @@ public class WufooProcessor implements Processor {
       JSONObject formStructure = new JSONObject(formStructureArray.get(0).toString());
       return formStructure.getString("Hash");
     } catch (JSONException e) {
-      log.error("JSONException occured while extracting form Name " +
+      log.error("JSONException occured while extracting form Hash value from Form Structure " +
           ".", e);
     }
     return "";

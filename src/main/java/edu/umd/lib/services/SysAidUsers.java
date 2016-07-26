@@ -11,7 +11,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import edu.umd.lib.services.SysAidConnector.SysAidLoginException;
+import edu.umd.lib.exception.SysAidLoginException;
 
 public class SysAidUsers {
 
@@ -28,6 +28,9 @@ public class SysAidUsers {
     return _instance;
   }
 
+  /***
+   * Load all Users of type user,admin and Manager on initialization
+   */
   private SysAidUsers() {
     this.LoadAllUsers("user");
     this.offsetValue = 0;
@@ -37,6 +40,11 @@ public class SysAidUsers {
     log.info("Total " + all_Users.length() + " Users loaded into Cache. ");
   }
 
+  /***
+   * Get All users List
+   *
+   * @return
+   */
   public JSONArray getAll_Users() {
     return all_Users;
   }
@@ -45,6 +53,9 @@ public class SysAidUsers {
     this.all_Users = all_Users;
   }
 
+  /***
+   * reload All users from SysAid to cache
+   */
   public void reloadAllUsers() {
     all_Users = new JSONArray();
     this.offsetValue = 0;
@@ -57,7 +68,7 @@ public class SysAidUsers {
   }
 
   /***
-   * * @return ServiceRequest_ID
+   * Connect to SysAid to get all users * @return ServiceRequest_ID
    */
   private JSONArray LoadAllUsers(String userType) {
 
@@ -90,23 +101,25 @@ public class SysAidUsers {
       return list_response;
     } catch (SysAidLoginException e) {
       log.error("SysAidLoginException occured while attempting to "
-          + "execute GET request.", e);
+          + "get list of all users in Cache.", e);
     } catch (JSONException e) {
       log.error("JSONException occured while attempting to "
-          + "execute GET request.", e);
+          + "get list of all users in Cache.", e);
     } catch (ParseException e) {
       log.error("ParseException occured while attempting to "
-          + "execute GET request.", e);
+          + "get list of all users in Cache.", e);
     } catch (IOException e) {
       log.error("IOException occured while attempting to "
-          + "execute GET request.", e);
+          + "get list of all users in Cache.", e);
     }
     return new JSONArray();
 
   }
 
   /***
-   *
+   * This method is used to get a user by providing any property of the user and
+   * its value
+   * 
    * @param key
    * @param Value
    */

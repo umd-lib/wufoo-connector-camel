@@ -6,6 +6,7 @@ import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.log4j.Logger;
 
+import edu.umd.lib.exception.FormMappingException;
 import edu.umd.lib.services.SysAidConnector;
 
 /**
@@ -36,7 +37,7 @@ public class SysAidProcessor implements Processor {
       sysaid.createServiceRequest(message, formMappingProperties);
     } else {
       log.error("Mapping file for the form:" + message.get("Hash") + " not found.");
-
+      throw new FormMappingException("Mapping file for the form :" + message.get("Hash") + " not found.");
     }
 
   }

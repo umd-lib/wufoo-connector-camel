@@ -20,6 +20,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import edu.umd.lib.exception.CamelHandShakeException;
+import edu.umd.lib.exception.SysAidLoginException;
+
 /**
  * WufooProcessor process the request from WuFoo by parsing the request then
  * creating a Hash map of fields and values from the form. The map is then
@@ -57,23 +60,16 @@ public class WufooProcessor implements Processor {
   @Override
   public void process(Exchange exchange) throws Exception {
 
-    try {
+    String message = exchange.getIn().getBody(String.class);
 
-      String message = exchange.getIn().getBody(String.class);
-
-      Map<String, List<String>> parameters = getQueryParams(message);
-      checkHandshake(parameters);
-      String formName = getHashvalue(parameters.get("FormStructure"));
-      Map<String, String> fields = getFields(parameters);
-      JSONArray fieldsList = getFieldStructure(parameters.get("FieldStructure"), fields);
-      HashMap<String, String> values = extractParameters(fieldsList);
-      values.put("Hash", formName);
-
-      exchange.getOut().setBody(values);
-      log.info("Total Number of Parameters from the request:" + parameters.size());
-    } catch (Exception e) {
-
-    }
+    Map<String, List<String>> parameters = getQueryParams(message);
+    checkHandshake(parameters);
+    String formName = getHashvalue(parameters.get("FormStructure"));
+    Map<String, String> fields = getFields(parameters);
+    JSONArray fieldsList = getFieldStructure(parameters.get("FieldStructure"), fields);
+    HashMap<String, String> values = extractParameters(fieldsList);
+    values.put("Hash", formName);
+    exchange.getOut().setBody(values);
 
   }
 
@@ -88,7 +84,8 @@ public class WufooProcessor implements Processor {
       JSONObject formStructure = new JSONObject(formStructureArray.get(0).toString());
       return formStructure.getString("Hash");
     } catch (JSONException e) {
-      e.printStackTrace();
+      log.error("JSONException occured while extracting form Hash value from Form Structure " +
+          ".", e);
     }
     return "";
   }
@@ -124,6 +121,8 @@ public class WufooProcessor implements Processor {
       return params;
 
     } catch (UnsupportedEncodingException ex) {
+      log.error("UnsupportedEncodingException occured while parsing query parameters " +
+          ".", ex);
       throw new AssertionError(ex);
     }
   }
@@ -139,8 +138,7 @@ public class WufooProcessor implements Processor {
   public void checkHandshake(Map<String, List<String>> parameters) throws CamelHandShakeException {
 
     String handshake = parameters.get("HandshakeKey").get(0);
-    log.info("Wufoo handshake:" + handshake);
-    log.info("camel handshake:" + handShakeKey);
+    log.info("Wufoo handshake and Camel HandShake Key Matches");
     if (handshake == null) {
       throw new CamelHandShakeException("Wufoo Handshake key is empty.");
     } else if (this.handShakeKey == null) {
@@ -255,7 +253,7 @@ public class WufooProcessor implements Processor {
       }
     } catch (JSONException e) {
       log.error("JSONException occured while attempting to "
-          + "execute POST request.", e);
+          + "Extract parameters from JSONArray.", e);
     }
     return paramaters;
   }
@@ -277,24 +275,8 @@ public class WufooProcessor implements Processor {
       this.handShakeKey = properties.getProperty("wufoo.handshake_key");
 
     } catch (IOException e) {
-      log.error("IOException occured while attempting to "
-          + "execute POST request. Authentication Failed ", e);
-    }
-  }
-
-  /***
-   * Custom Exception to check if the request is valid request from WuFoo
-   */
-  class CamelHandShakeException extends Exception {
-
-    private static final long serialVersionUID = 1L;
-
-    public CamelHandShakeException() {
-    }
-
-    // Constructor that accepts a message
-    public CamelHandShakeException(String message) {
-      super(message);
+      log.error("IOException occured while accessing the configuration file " +
+          resourceName + ".", e);
     }
   }
 

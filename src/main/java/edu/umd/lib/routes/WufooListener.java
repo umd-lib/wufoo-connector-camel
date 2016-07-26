@@ -1,14 +1,13 @@
 package edu.umd.lib.routes;
 
-import org.apache.camel.LoggingLevel;
-
+import edu.umd.lib.process.ExceptionProcessor;
 import edu.umd.lib.process.SysAidProcessor;
 import edu.umd.lib.process.WufooProcessor;
 
 public class WufooListener extends AbstractRoute {
 
   /**
-   * Initializes a new instance of this class which defines a Camel route which
+   * Initializes a new instance of this class which defines a Camel route that
    * listens for incoming service invocations.
    */
   public WufooListener() {
@@ -25,17 +24,15 @@ public class WufooListener extends AbstractRoute {
     /**
      * A generic error handler (specific to this RouteBuilder)
      */
-
     onException(Exception.class)
-        .routeId("ConnectionExceptionRoute")
+        .routeId("ExceptionRoute")
+        .process(new ExceptionProcessor())
         .handled(true)
-        .log(LoggingLevel.ERROR, "Connection Error")
         .maximumRedeliveries("{{camel.maximum_tries}}")
         .redeliveryDelay("{{camel.redelivery_delay}}")
         .backOffMultiplier("{{camel.backoff_multiplier}}")
         .useExponentialBackOff()
         .maximumRedeliveryDelay("{{camel.maximum_redelivery_delay}}")
-        .log(LoggingLevel.DEBUG, "Rolling back!")
         .to("direct:send_error_email");
 
     /**
@@ -44,7 +41,7 @@ public class WufooListener extends AbstractRoute {
     from("jetty:" + this.getEndpoint()).streamCaching()
         .routeId("WufooListener")
         .process(new WufooProcessor())
-        .log("Wufoo Process Completed")
+        .log("Wufoo Request Processing Complete by Wufoo listener.")
         .to("direct:connect.sysaid");
 
     /**
@@ -54,18 +51,23 @@ public class WufooListener extends AbstractRoute {
     from("direct:connect.sysaid")
         .routeId("SysAidConnector")
         .process(new SysAidProcessor())
-        .log("SysAid Request Created");
+        .log("Request to SysAid Completed by SysAid connector.");
 
     /****
      * Send Email
      */
     from("direct:send_error_email")
+        .doTry()
         .routeId("SendErrorEmail")
-        .log("Sending Email to SysAdmin")
-        .setHeader("subject", simple("Error in Creating SysAid Ticket Even after {{camel.maximum_tries}} retries."))
+        .log("processing a email to be sent using SendErrorEmail Route.")
+        .setHeader("subject", simple(
+            "Exception Occured in Wufoo-SysAid Integration, Total Number of Attempts: {{camel.maximum_tries}} retries."))
         .setHeader("From", simple("{{email.from}}"))
         .setHeader("To", simple("{{email.to}}"))
-        .to("{{email.uri}}");
+        .to("{{email.uri}}")
+        .doCatch(Exception.class)
+        .log("Error Occurred While Sending Email to specified to address.")
+        .end();
 
   }
 

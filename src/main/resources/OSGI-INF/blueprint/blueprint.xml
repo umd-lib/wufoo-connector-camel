@@ -32,9 +32,13 @@
 
   <bean id="smtp" class="org.apache.camel.component.mail.MailComponent"/>
 
+  <bean id="wufoo-listener" class="edu.umd.lib.routes.WufooListener">
+    <property name="handshake" value="${wufoo.handshake_key}" />
+  </bean>
+
   <camelContext id="WufooConnectorCamel" xmlns="http://camel.apache.org/schema/blueprint">
-    <package>edu.umd.lib</package>
-  	<propertyPlaceholder id="placeholder" location="edu.umd.lib.wufooconnectorcamel.cfg"/>
+    <propertyPlaceholder id="placeholder" location="edu.umd.lib.wufooconnectorcamel.cfg"/>
+    <routeBuilder ref="wufoo-listener" />
   </camelContext>
 
 </blueprint>

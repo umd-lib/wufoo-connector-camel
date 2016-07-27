@@ -45,8 +45,10 @@ public class WufooProcessor implements Processor {
    * Load the configuration file while creating the object and populate the
    * handshake key from the properties file
    */
-  public WufooProcessor() {
-    this.loadConfiguration("edu.umd.lib.wufooconnectorcamel.cfg");
+  public WufooProcessor(String handshakeKey) {
+	  this.handShakeKey = handshakeKey;
+	  log.info("Setting handshake key: " + this.handShakeKey);
+    //this.loadConfiguration("edu.umd.lib.wufooconnectorcamel.cfg");
   }
 
   /***

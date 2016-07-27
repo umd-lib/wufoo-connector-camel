@@ -6,6 +6,16 @@ import edu.umd.lib.process.WufooProcessor;
 
 public class WufooListener extends AbstractRoute {
 
+	private String handshake;
+
+	public void setHandshake(String key) {
+		this.handshake = key;
+	}
+
+	public String getHandshake() {
+		return this.handshake;
+	}
+
   /**
    * Initializes a new instance of this class which defines a Camel route that
    * listens for incoming service invocations.
@@ -40,7 +50,7 @@ public class WufooListener extends AbstractRoute {
      */
     from("jetty:" + this.getEndpoint()).streamCaching()
         .routeId("WufooListener")
-        .process(new WufooProcessor())
+        .process(new WufooProcessor(this.handshake))
         .log("Wufoo Request Processing Complete by Wufoo listener.")
         .to("direct:connect.sysaid");
 

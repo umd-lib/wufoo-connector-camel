@@ -228,14 +228,14 @@
         </executions>
       </plugin>
 
-      <!-- Allows the example to be run via 'mvn compile exec:java' -->
+      <!-- Allows the route to be run using the blueprint via 'mvn camel:run' -->
       <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>exec-maven-plugin</artifactId>
-        <version>1.2.1</version>
+        <groupId>org.apache.camel</groupId>
+        <artifactId>camel-maven-plugin</artifactId>
+        <version>${camel.version}</version>
         <configuration>
-            <mainClass>edu.umd.lib.ServicesApp</mainClass>
-            <includePluginDependencies>false</includePluginDependencies>
+          <!-- Tell camel run plugin to load application from the blueprint file -->
+          <useBlueprint>true</useBlueprint>
         </configuration>
       </plugin>
 

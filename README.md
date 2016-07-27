@@ -10,7 +10,7 @@ To build this project use
 
 To run this project from within Maven use
 
-    mvn exec:java
+    mvn camel:run
 
 For more help see the Apache Camel documentation
 

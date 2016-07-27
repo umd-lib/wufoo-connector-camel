@@ -11,22 +11,22 @@
   <cm:property-placeholder id="properties" persistent-id="edu.umd.lib.wufooconnectorcamel" update-strategy="reload">
     <cm:default-properties>
       <cm:property name="default.domain" value="http://localhost:8080/"/>
-      <cm:property name="default.routeName" value="route"/>
-      <cm:property name="default.serviceName" value="serviceName"/>
-      <cm:property name="wufoo.routeName" value="wufoo"/>
-      <cm:property name="wufoo.serviceName" value="wufoo-listener"/>
-      <cm:property name="wufoo.handshake_key" value=""/>
-      <cm:property name="SysAid.serviceName" value="wufoo-listener"/>
-      <cm:property name="SysAid.url" value=""/>
-      <cm:property name="SysAid.userName" value=""/>
-      <cm:property name="SysAid.password" value=""/>
+      <cm:property name="default.routename" value="route"/>
+      <cm:property name="default.servicename" value="servicename"/>
+      <cm:property name="wufoo.routename" value="wufoo"/>
+      <cm:property name="wufoo.servicename" value="wufoo-listener"/>
+      <cm:property name="wufoo.handshake_key" value="testing"/>
+      <cm:property name="sysaid.servicename" value="wufoo-listener"/>
+      <cm:property name="sysaid.url" value="https://libticketingdev.umd.edu/api/v1/"/>
+      <cm:property name="sysaid.username" value=""/>
+      <cm:property name="sysaid.password" value=""/>
       <cm:property name="camel.maximum_tries" value="3"/>
       <cm:property name="camel.redelivery_delay" value="1000"/>
-      <cm:property name="camel.backOff_multiplier" value="2"/>
+      <cm:property name="camel.backoff_multiplier" value="2"/>
       <cm:property name="camel.maximum_redelivery_delay" value="6000"/>
       <cm:property name="email.from" value=""/>
       <cm:property name="email.to" value=""/>
-      <cm:property name="email.uri" value=""/>
+      <cm:property name="email.uri" value="smtp://localhost:25"/>
     </cm:default-properties>
   </cm:property-placeholder> 
 
@@ -34,6 +34,7 @@
 
   <camelContext id="WufooConnectorCamel" xmlns="http://camel.apache.org/schema/blueprint">
     <package>edu.umd.lib</package>
+  	<propertyPlaceholder id="placeholder" location="edu.umd.lib.wufooconnectorcamel.cfg"/>
   </camelContext>
 
 </blueprint>

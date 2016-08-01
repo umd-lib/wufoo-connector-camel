@@ -12,6 +12,7 @@
     <feature version="${camel.version}">camel-mail</feature>
     <feature version="${camel.version}">camel-spring</feature>
     <configfile finalname="/etc/edu.umd.lib.wufooconnectorcamel.cfg">mvn:edu.umd.lib/wufoo-connector-camel/${project.version}/cfg/configuration</configfile>
+    <configfile finalname="/etc/wufoo-sysaid-field-mapping-sample.properties">mvn:edu.umd.lib/wufoo-connector-camel/${project.version}/cfg/field-mapping</configfile>
   </feature>
 
 </features>

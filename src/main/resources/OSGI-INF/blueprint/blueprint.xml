@@ -27,6 +27,7 @@
       <cm:property name="email.from" value=""/>
       <cm:property name="email.to" value=""/>
       <cm:property name="email.uri" value="smtp://localhost:25"/>
+      <cm:property name="wufoo.sysaid.mapping" value="q1li2eu01gm1gnx=/apps/git/wufoo-camel-connector/src/main/resources/Wufoo-Sysaid-Mapping.properties,q1li2eu01gm1gny=Wufoo-Sysaid-Mapping.properties"/>
     </cm:default-properties>
   </cm:property-placeholder> 
 
@@ -34,6 +35,10 @@
 
   <bean id="wufoo-listener" class="edu.umd.lib.routes.WufooListener">
     <property name="handshake" value="${wufoo.handshake_key}" />
+    <property name="sysaidurl" value="${sysaid.url}" />
+    <property name="sysaidusername" value="${sysaid.username}" />
+    <property name="sysaidpassword" value="${sysaid.password}" />
+    <property name="formmapping" value="${wufoo.sysaid.mapping}" />
   </bean>
 
   <camelContext id="WufooConnectorCamel" xmlns="http://camel.apache.org/schema/blueprint">

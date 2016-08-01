@@ -6,15 +6,11 @@ import edu.umd.lib.process.WufooProcessor;
 
 public class WufooListener extends AbstractRoute {
 
-	private String handshake;
-
-	public void setHandshake(String key) {
-		this.handshake = key;
-	}
-
-	public String getHandshake() {
-		return this.handshake;
-	}
+  private String handshake;
+  private String sysaidurl;
+  private String sysaidusername;
+  private String sysaidpassword;
+  private String formmapping;
 
   /**
    * Initializes a new instance of this class which defines a Camel route that
@@ -60,7 +56,7 @@ public class WufooListener extends AbstractRoute {
      */
     from("direct:connect.sysaid")
         .routeId("SysAidConnector")
-        .process(new SysAidProcessor())
+        .process(new SysAidProcessor(this.sysaidurl, this.sysaidusername, this.sysaidpassword, this.formmapping))
         .log("Request to SysAid Completed by SysAid connector.");
 
     /****
@@ -79,6 +75,46 @@ public class WufooListener extends AbstractRoute {
         .log("Error Occurred While Sending Email to specified to address.")
         .end();
 
+  }
+
+  public String getFormmapping() {
+    return formmapping;
+  }
+
+  public void setFormmapping(String formmapping) {
+    this.formmapping = formmapping;
+  }
+
+  public String getSysaidurl() {
+    return sysaidurl;
+  }
+
+  public void setSysaidurl(String sysaidurl) {
+    this.sysaidurl = sysaidurl;
+  }
+
+  public String getSysaidusername() {
+    return sysaidusername;
+  }
+
+  public void setSysaidusername(String sysaidusername) {
+    this.sysaidusername = sysaidusername;
+  }
+
+  public String getSysaidpassword() {
+    return sysaidpassword;
+  }
+
+  public void setSysaidpassword(String sysaidpassword) {
+    this.sysaidpassword = sysaidpassword;
+  }
+
+  public void setHandshake(String key) {
+    this.handshake = key;
+  }
+
+  public String getHandshake() {
+    return this.handshake;
   }
 
 }

@@ -50,6 +50,7 @@ public class ExceptionProcessor implements Processor {
       } else {
         email_Content.append("Exception: " + exceptionClass + " \n");
         email_Content.append("Exception Message: " + exception.getMessage() + " \n");
+        log.info("Exception:" + exceptionClass);
       }
 
       email_Content.append("\nCamel Message History: \n");

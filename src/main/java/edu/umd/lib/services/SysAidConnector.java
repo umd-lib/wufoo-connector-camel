@@ -1,7 +1,7 @@
 package edu.umd.lib.services;
 
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -27,6 +27,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import edu.umd.lib.exception.FormMappingException;
 import edu.umd.lib.exception.SysAidLoginException;
 
 /**
@@ -50,7 +51,6 @@ public class SysAidConnector {
   private String sysaid_Password;
   private String session_id;
 
-  Properties Config_properties = new Properties();
   HashMap<String, String> configuration = new HashMap<String, String>();
 
   private HashMap<String, HashMap<String, String>> dropdownList = new HashMap<String, HashMap<String, String>>();
@@ -87,6 +87,12 @@ public class SysAidConnector {
     this.session_id = session_id;
   }
 
+  public SysAidConnector(String url, String login, String password) {
+    this.sysaid_URL = url;
+    this.sysaid_Username = login;
+    this.sysaid_Password = password;
+  }
+
   /***
    * Default Constructor, While creating an object the configuration for SysAid
    * is loaded to the object. Using the credentials from the configuration
@@ -98,12 +104,9 @@ public class SysAidConnector {
    *
    * @throws SysAidLoginException
    */
-
-  public SysAidConnector() throws SysAidLoginException {
-    this.loadConfiguration("edu.umd.lib.wufooconnectorcamel.cfg");
+  public void sysAidLogin() throws SysAidLoginException {
     this.authenticate();
     this.getAllDropDownList();
-
   }
 
   /***
@@ -117,61 +120,10 @@ public class SysAidConnector {
    *
    * @throws SysAidLoginException
    */
-  public SysAidConnector(String session_id) {
+  public SysAidConnector(String url, String session_id) {
     this.session_id = session_id;
-    this.loadConfiguration("edu.umd.lib.wufooconnectorcamel.cfg");
+    this.sysaid_URL = url;
     this.getAllDropDownList();
-  }
-
-  /***
-   * Method to load the configuration Setting from Configuration file
-   *
-   * @param resourceName
-   *          properties file name
-   */
-  public void loadConfiguration(String resourceName) {
-
-    ClassLoader loader = Thread.currentThread().getContextClassLoader();
-    InputStream resourceStream = null;
-
-    try {
-
-      resourceStream = loader.getResourceAsStream(resourceName);
-      Config_properties.load(resourceStream);
-      this.sysaid_URL = Config_properties.getProperty("sysaid.url");
-      this.sysaid_Username = Config_properties.getProperty("sysaid.username");
-      this.sysaid_Password = Config_properties.getProperty("sysaid.password");
-
-    } catch (IOException e) {
-      log.error("IOException occured in Method : loadConfiguration of Class :SysAidConnector.java"
-          + "  while attempting access Resource Stream ", e);
-    } finally {
-      try {
-        resourceStream.close();
-      } catch (IOException e) {
-        log.error("IOException occured in Method : loadConfiguration of Class :SysAidConnector.java"
-            + "  while attempting to close the Resource Stream ", e);
-      }
-    }
-  }
-
-  /***
-   * Get Configuration Properties from the Loaded Configuration Properties
-   * object, Property Name is passed as parameter and corresponding value is
-   * returned
-   *
-   * @param PropertyName
-   * @return
-   */
-  public String getConfigProperty(String PropertyName) {
-    if (Config_properties.containsKey(PropertyName)) {
-      return Config_properties.getProperty(PropertyName);
-    } else {
-      log.info("Property with Name: " + PropertyName
-          + " not found in the Configuration file, Verify the Configuration File ");
-      return "";
-    }
-
   }
 
   /***
@@ -180,31 +132,23 @@ public class SysAidConnector {
    *
    * @param resourceName
    *          properties file name
+   * @throws FormMappingException
    */
-  public void LoadWufooSysaidMapping(String resourceName) {
+  public void LoadWufooSysaidMapping(String resource) throws FormMappingException {
 
     Properties properties = new Properties();
-    ClassLoader loader = Thread.currentThread().getContextClassLoader();
-    InputStream resourceStream = null;
     try {
-      resourceStream = loader.getResourceAsStream(resourceName);
-      properties.load(resourceStream);
+      properties.load(new FileInputStream(resource));
       Set<Object> keys = properties.keySet();
       for (Object k : keys) {
         String key = (String) k;
         configuration.put(key, properties.getProperty(key));
       }
-
     } catch (IOException e) {
+
       log.error("IOException occured in Method : LoadwufooSysaidMapping of Class :SysAidConnector.java"
           + "  while attempting access Resource Stream ", e);
-    } finally {
-      try {
-        resourceStream.close();
-      } catch (IOException e) {
-        log.error("IOException occured in Method : LoadwufooSysaidMapping of Class :SysAidConnector.java"
-            + "  while attempting to close the Resource Stream ", e);
-      }
+      throw new FormMappingException("Mapping file :" + resource + " Not found.");
     }
   }
 
@@ -274,10 +218,11 @@ public class SysAidConnector {
    * SysAid expects and sent to SysAid as JSON info parameters
    *
    * @return ServiceRequest_ID
+   * @throws FormMappingException
    */
-  public String createServiceRequest(HashMap<String, String> values, String resourceName) {
+  public String createServiceRequest(HashMap<String, String> values, String resource) throws FormMappingException {
 
-    this.LoadWufooSysaidMapping(resourceName);
+    this.LoadWufooSysaidMapping(resource);
 
     try {
 
@@ -523,7 +468,8 @@ public class SysAidConnector {
       } else if (sysAidFieldType.equalsIgnoreCase("UserDropdown")) {
 
         String wufoofieldKey = configuration.get(wufooField + ".fieldkey");
-        JSONObject userObject = SysAidUsers.getInstance().getUserbyKey(wufoofieldKey, values.get(wufooField));
+        JSONObject userObject = SysAidUsers.getInstance(this.sysaid_URL, this.session_id).getUserbyKey(wufoofieldKey,
+            values.get(wufooField));
 
         if (userObject != null) {
           finalValues.put(sysAidField, userObject.getString("id"));
@@ -595,14 +541,7 @@ public class SysAidConnector {
    */
   public static void main(String args[]) {
 
-    try {
-      SysAidConnector sysaid = new SysAidConnector();
-      sysaid.getAllDropDownList();
-      // sysaid.createServiceRequest();
-    } catch (SysAidLoginException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    }
+    SysAidConnector sysaid = new SysAidConnector("", "", "");
 
   }
 

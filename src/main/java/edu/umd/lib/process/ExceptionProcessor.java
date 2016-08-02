@@ -39,18 +39,22 @@ public class ExceptionProcessor implements Processor {
         email_Content.append("Exception: SysAidLoginException \n");
         email_Content.append("Exception Message: " + exception.getMessage() + " \n");
         log.info("SysAid Login Exception");
+        exception.printStackTrace();
       } else if (exceptionClass.equalsIgnoreCase(CamelHandShakeException.class.getName())) {
         email_Content.append("Exception: CamelHandShakeException \n");
         email_Content.append("Exception Message: " + exception.getMessage() + " \n");
         log.info("CamelHandShakeException Exception");
+        exception.printStackTrace();
       } else if (exceptionClass.equalsIgnoreCase(FormMappingException.class.getName())) {
         email_Content.append("Exception: FormMappingException \n");
         email_Content.append("Exception Message: " + exception.getMessage() + " \n");
         log.info("FormMappingException Exception");
+        exception.printStackTrace();
       } else {
         email_Content.append("Exception: " + exceptionClass + " \n");
         email_Content.append("Exception Message: " + exception.getMessage() + " \n");
         log.info("Exception:" + exceptionClass);
+        exception.printStackTrace();
       }
 
       email_Content.append("\nCamel Message History: \n");

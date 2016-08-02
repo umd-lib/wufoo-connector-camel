@@ -41,8 +41,10 @@ public class SysAidProcessor implements Processor {
    */
   public SysAidProcessor(String url, String login, String password, String formmapping) throws SysAidLoginException {
     sysaid = new SysAidConnector(url, login, password);
-    sysaid.sysAidLogin();
-    wufoo_sysaid_map = this.parseMap(formmapping);
+    if (formmapping != null && !formmapping.equalsIgnoreCase("")) {
+      wufoo_sysaid_map = this.parseMap(formmapping);
+    }
+
   }
 
   /****
@@ -62,10 +64,12 @@ public class SysAidProcessor implements Processor {
   @Override
   public void process(Exchange exchange) throws Exception {
 
+    sysaid.setSession_id(null);
+    sysaid.sysAidLogin();
     log.info("Processing new request to SysAid");
     HashMap<String, String> message = exchange.getIn().getBody(HashMap.class);
 
-    if (wufoo_sysaid_map.containsKey(message.get("Hash"))) {
+    if (wufoo_sysaid_map != null && wufoo_sysaid_map.containsKey(message.get("Hash"))) {
       String formMappingProperties = wufoo_sysaid_map.get(message.get("Hash"));
       log.info("Property File Name :" + formMappingProperties);
       sysaid.createServiceRequest(message, formMappingProperties);

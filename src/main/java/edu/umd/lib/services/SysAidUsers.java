@@ -11,8 +11,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import edu.umd.lib.exception.SysAidLoginException;
-
 public class SysAidUsers {
 
   private int offsetValue = 0;
@@ -21,9 +19,12 @@ public class SysAidUsers {
   private Logger log = Logger.getLogger(SysAidUsers.class);
   private JSONArray all_Users = new JSONArray();
 
-  public static synchronized SysAidUsers getInstance() {
+  private String sysaidUrl;
+  private String sysaidSession;
+
+  public static synchronized SysAidUsers getInstance(String url, String sessionid) {
     if (_instance == null) {
-      _instance = new SysAidUsers();
+      _instance = new SysAidUsers(url, sessionid);
     }
     return _instance;
   }
@@ -31,7 +32,9 @@ public class SysAidUsers {
   /***
    * Load all Users of type user,admin and Manager on initialization
    */
-  private SysAidUsers() {
+  private SysAidUsers(String url, String sessionid) {
+    this.sysaidUrl = url;
+    this.sysaidSession = sessionid;
     this.LoadAllUsers("user");
     this.offsetValue = 0;
     this.LoadAllUsers("admin");
@@ -56,7 +59,9 @@ public class SysAidUsers {
   /***
    * reload All users from SysAid to cache
    */
-  public void reloadAllUsers() {
+  public void reloadAllUsers(String url, String sessionid) {
+    this.sysaidUrl = url;
+    this.sysaidSession = sessionid;
     all_Users = new JSONArray();
     this.offsetValue = 0;
     this.LoadAllUsers("user");
@@ -73,7 +78,7 @@ public class SysAidUsers {
   private JSONArray LoadAllUsers(String userType) {
 
     try {
-      SysAidConnector sysaid = new SysAidConnector();
+      SysAidConnector sysaid = new SysAidConnector(this.sysaidUrl, this.sysaidSession);
       HttpResponse response = sysaid
           .getRequest(sysaid.getSysaid_URL() + "users?view=mobile&offset=" + offsetValue + "&type=" + userType);
       HttpEntity entity = response.getEntity();
@@ -99,9 +104,6 @@ public class SysAidUsers {
         LoadAllUsers(userType);
       }
       return list_response;
-    } catch (SysAidLoginException e) {
-      log.error("SysAidLoginException occured while attempting to "
-          + "get list of all users in Cache.", e);
     } catch (JSONException e) {
       log.error("JSONException occured while attempting to "
           + "get list of all users in Cache.", e);
@@ -119,7 +121,7 @@ public class SysAidUsers {
   /***
    * This method is used to get a user by providing any property of the user and
    * its value
-   * 
+   *
    * @param key
    * @param Value
    */

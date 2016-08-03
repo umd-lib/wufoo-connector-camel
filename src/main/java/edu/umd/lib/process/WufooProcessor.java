@@ -46,9 +46,8 @@ public class WufooProcessor implements Processor {
    * handshake key from the properties file
    */
   public WufooProcessor(String handshakeKey) {
-	  this.handShakeKey = handshakeKey;
-	  log.info("Setting handshake key: " + this.handShakeKey);
-    //this.loadConfiguration("edu.umd.lib.wufooconnectorcamel.cfg");
+    this.handShakeKey = handshakeKey;
+    log.info("Setting handshake key: " + this.handShakeKey);
   }
 
   /***
@@ -140,13 +139,14 @@ public class WufooProcessor implements Processor {
   public void checkHandshake(Map<String, List<String>> parameters) throws CamelHandShakeException {
 
     String handshake = parameters.get("HandshakeKey").get(0);
-    log.info("Wufoo handshake and Camel HandShake Key Matches");
     if (handshake == null) {
       throw new CamelHandShakeException("Wufoo Handshake key is empty.");
     } else if (this.handShakeKey == null) {
       throw new CamelHandShakeException("Camel Handshake key is empty.");
     } else if (!this.handShakeKey.equalsIgnoreCase(handshake)) {
       throw new CamelHandShakeException("Camel Handshake key and Wufoo Handshake key does not match.");
+    } else {
+      log.info("Wufoo handshake and Camel HandShake Key Matches");
     }
 
   }

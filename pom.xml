@@ -132,6 +132,11 @@
 	    <version>${camel.version}</version>
 	</dependency>
 	
+	<dependency>
+	  <groupId>com.google.guava</groupId>
+	  <artifactId>guava</artifactId>
+	  <version>19.0</version>
+	</dependency>
     
   </dependencies>
 
@@ -195,7 +200,8 @@
           <instructions>
             <Bundle-SymbolicName>wufoo-connector-camel-bundle</Bundle-SymbolicName>
             <Private-Package>edu.umd.lib.*</Private-Package>
-            <Import-Package>*</Import-Package>
+            <Import-Package>*,!com.google.guava</Import-Package>
+            <Embed-Dependency>guava</Embed-Dependency>
           </instructions>
         </configuration>
       </plugin>

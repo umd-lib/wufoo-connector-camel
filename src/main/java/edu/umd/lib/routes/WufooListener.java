@@ -1,31 +1,58 @@
 package edu.umd.lib.routes;
 
+import org.apache.camel.spring.SpringRouteBuilder;
+
 import edu.umd.lib.process.ExceptionProcessor;
 import edu.umd.lib.process.SysAidProcessor;
 import edu.umd.lib.process.WufooProcessor;
 
-public class WufooListener extends AbstractRoute {
+public class WufooListener extends SpringRouteBuilder {
 
+  /**
+   * Handshake key for security
+   */
   private String handshake;
+
+  /**
+   * SysAid URL
+   */
   private String sysaidurl;
+
+  /**
+   * SysAid User id for login
+   */
   private String sysaidusername;
+
+  /**
+   * SysAid Password for login
+   */
   private String sysaidpassword;
+
+  /**
+   * Map containing form mapping configuration
+   */
   private String formmapping;
 
   /**
-   * Initializes a new instance of this class which defines a Camel route that
-   * listens for incoming service invocations.
+   * The domain of this route
    */
-  public WufooListener() {
-    // sets the name of this bean
-    this.setName("{{wufoo.routename}}");
-    // defines the service-name as set in the properties file
-    this.setServiceName("{{wufoo.servicename}}");
+  private String domain = "{{default.domain}}";
+  /**
+   * The name of this route
+   */
+  private String name = "{{wufoo.routename}}";
+  /**
+   * The service name as defined in the respective properties file.
+   */
+  private String serviceName = "{{wufoo.servicename}}";
 
-  }
+  /**
+   * The endpoint exposed by Camel
+   */
+  private String endpoint = this.domain + this.name + "/" + this.serviceName;
 
   @Override
-  protected void defineRoute() throws Exception {
+  public void configure() throws Exception {
 
     /**
      * A generic error handler (specific to this RouteBuilder)
@@ -44,7 +71,7 @@ public class WufooListener extends AbstractRoute {
     /**
      * Parse Request from WuFoo Web hooks and create hash map for SysAid Route
      */
-    from("jetty:" + this.getEndpoint()).streamCaching()
+    from("jetty:" + this.endpoint).streamCaching()
         .routeId("WufooListener")
         .process(new WufooProcessor(this.handshake))
         .log("Wufoo Request Processing Complete by Wufoo listener.")

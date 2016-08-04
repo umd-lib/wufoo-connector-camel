@@ -16,17 +16,17 @@ public class WufooListener extends SpringRouteBuilder {
   /**
    * SysAid URL
    */
-  private String sysaidurl;
+  private String sysaidwebformurl;
 
   /**
    * SysAid User id for login
    */
-  private String sysaidusername;
+  private String sysaidaccountid;
 
   /**
    * SysAid Password for login
    */
-  private String sysaidpassword;
+  private String sysaidformid;
 
   /**
    * Map containing form mapping configuration
@@ -83,7 +83,8 @@ public class WufooListener extends SpringRouteBuilder {
      */
     from("direct:connect.sysaid")
         .routeId("SysAidConnector")
-        .process(new SysAidProcessor(this.sysaidurl, this.sysaidusername, this.sysaidpassword, this.formmapping))
+        .process(
+            new SysAidProcessor(this.sysaidwebformurl, this.sysaidaccountid, this.sysaidformid, this.formmapping))
         .log("Request to SysAid Completed by SysAid connector.");
 
     /****
@@ -112,28 +113,28 @@ public class WufooListener extends SpringRouteBuilder {
     this.formmapping = formmapping;
   }
 
-  public String getSysaidurl() {
-    return sysaidurl;
+  public String getSysaidwebformurl() {
+    return sysaidwebformurl;
   }
 
-  public void setSysaidurl(String sysaidurl) {
-    this.sysaidurl = sysaidurl;
+  public void setSysaidwebformurl(String sysaidwebformurl) {
+    this.sysaidwebformurl = sysaidwebformurl;
   }
 
-  public String getSysaidusername() {
-    return sysaidusername;
+  public String getSysaidaccountid() {
+    return sysaidaccountid;
   }
 
-  public void setSysaidusername(String sysaidusername) {
-    this.sysaidusername = sysaidusername;
+  public void setSysaidaccountid(String sysaidaccountid) {
+    this.sysaidaccountid = sysaidaccountid;
   }
 
-  public String getSysaidpassword() {
-    return sysaidpassword;
+  public String getSysaidformid() {
+    return sysaidformid;
   }
 
-  public void setSysaidpassword(String sysaidpassword) {
-    this.sysaidpassword = sysaidpassword;
+  public void setSysaidformid(String sysaidformid) {
+    this.sysaidformid = sysaidformid;
   }
 
   public void setHandshake(String key) {

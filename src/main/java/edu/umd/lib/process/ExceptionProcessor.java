@@ -9,7 +9,6 @@ import org.apache.log4j.Logger;
 
 import edu.umd.lib.exception.CamelHandShakeException;
 import edu.umd.lib.exception.FormMappingException;
-import edu.umd.lib.exception.SysAidLoginException;
 
 /**
  * ExceptionProcessor creates the Email body content for notifying Exceptions.
@@ -35,12 +34,7 @@ public class ExceptionProcessor implements Processor {
       StringBuilder email_Content = new StringBuilder();
 
       // Based on the Exception Class create Custom Email Message
-      if (exceptionClass.equalsIgnoreCase(SysAidLoginException.class.getName())) {
-        email_Content.append("Exception: SysAidLoginException \n");
-        email_Content.append("Exception Message: " + exception.getMessage() + " \n");
-        log.info("SysAid Login Exception");
-        exception.printStackTrace();
-      } else if (exceptionClass.equalsIgnoreCase(CamelHandShakeException.class.getName())) {
+      if (exceptionClass.equalsIgnoreCase(CamelHandShakeException.class.getName())) {
         email_Content.append("Exception: CamelHandShakeException \n");
         email_Content.append("Exception Message: " + exception.getMessage() + " \n");
         log.info("CamelHandShakeException Exception");

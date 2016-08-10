@@ -23,10 +23,10 @@
       <cm:property name="email.from" value=""/>
       <cm:property name="email.to" value=""/>
       <cm:property name="email.uri" value="smtp://localhost:25"/>
-      <cm:property name="wufoo.sysaid.mapping" value="q1li2eu01gm1gnx=/apps/git/wufoo-camel-connector/src/main/resources/Wufoo-Sysaid-Mapping.properties,q1li2eu01gm1gny=Wufoo-Sysaid-Mapping.properties"/>
-   	  <cm:property name="sysaid.webformurl" value="https://libticketingdev.umd.edu/webformsubmit?pageEncoding=utf-8"/>
+      <cm:property name="wufoo.sysaid.mapping" value=""/>
+   	  <cm:property name="sysaid.webformurl" value=""/>
    	  <cm:property name="sysaid.accountid" value=""/>
-   	  <cm:property name="sysaid.formid" value="8cb90ec:1565644c31d:-7ffb"/>
+   	  <cm:property name="sysaid.formid" value=""/>
     </cm:default-properties>
   </cm:property-placeholder> 
 

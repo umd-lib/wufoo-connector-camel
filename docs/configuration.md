@@ -62,6 +62,11 @@ Steps to find SysAid Configuration information.
  <input type="hidden" name="formID" value="8cb90ec:1565644c31d:-7ffb" />
 
 ```
+* Find the form action tag with name 'frm'. This value should be used for webform url value.
+```
+ <form action="https://libticketingdev.umd.edu/webformsubmit?pageEncoding=utf-8" method="post" name="frm">
+
+```
 * Click on your name on the top header and select about from the menu options.
 * Account ID can be found with field title Account Name.
 * SysAid url can be found with field title server url.

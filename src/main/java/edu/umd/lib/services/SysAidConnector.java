@@ -20,6 +20,7 @@ import org.apache.log4j.Logger;
 import org.json.JSONException;
 
 import edu.umd.lib.exception.FormMappingException;
+import edu.umd.lib.exception.SysAidConnectorException;
 
 /**
  * SysAidConnector connects to SysAid using Login credentials from Configuration
@@ -81,8 +82,10 @@ public class SysAidConnector {
    *
    * @return ServiceRequest_ID
    * @throws FormMappingException
+   * @throws SysAidConnectorException
    */
-  public void createServiceRequest(HashMap<String, String> values, String resource) throws FormMappingException {
+  public void createServiceRequest(HashMap<String, String> values, String resource)
+      throws FormMappingException, SysAidConnectorException {
 
     this.LoadWufooSysaidMapping(resource);
 
@@ -110,6 +113,9 @@ public class SysAidConnector {
           + " create service request. Method:createServiceRequest", e);
     } catch (JSONException e) {
       log.error("JSONException occured while attempting to"
+          + " create service request. Method:createServiceRequest", e);
+    } catch (IllegalStateException e) {
+      log.error("IllegalStateException occured while attempting to"
           + " create service request. Method:createServiceRequest", e);
     }
 
@@ -202,10 +208,26 @@ public class SysAidConnector {
    *
    * @param fieldMappings
    * @return
+   * @throws SysAidConnectorException
    */
-  protected List<NameValuePair> extractFields_SysAid(HashMap<String, String> fieldMappings) {
+  protected List<NameValuePair> extractFields_SysAid(HashMap<String, String> fieldMappings)
+      throws SysAidConnectorException {
 
     List<NameValuePair> fields = new ArrayList<NameValuePair>();
+
+    if (this.sysaid_accountID == null || this.sysaid_accountID.equals("")) {
+      throw new SysAidConnectorException(
+          "SysAid Account ID information not found. Please verify wufooConnector configuration");
+    }
+    if (this.sysaid_formID == null || this.sysaid_formID.equals("")) {
+      throw new SysAidConnectorException(
+          "SysAid Form ID information not found. Please verify wufooConnector configuration");
+    }
+    if (this.sysaid_webformurl == null || this.sysaid_webformurl.equals("")) {
+      throw new SysAidConnectorException(
+          "SysAid Webform url not found. Please verify wufooConnector configuration");
+    }
+
     fields.add(new BasicNameValuePair("accountID", sysaid_accountID));
     fields.add(new BasicNameValuePair("formID", sysaid_formID));
 

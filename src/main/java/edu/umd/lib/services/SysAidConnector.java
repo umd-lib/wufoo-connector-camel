@@ -2,33 +2,25 @@ package edu.umd.lib.services;
 
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 
-import org.apache.http.Header;
-import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
 import org.apache.http.ParseException;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.protocol.HTTP;
-import org.apache.http.util.EntityUtils;
+import org.apache.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
-import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import edu.umd.lib.exception.FormMappingException;
-import edu.umd.lib.exception.SysAidLoginException;
+import edu.umd.lib.exception.SysAidConnectorException;
 
 /**
  * SysAidConnector connects to SysAid using Login credentials from Configuration
@@ -46,84 +38,16 @@ public class SysAidConnector {
 
   private Logger log = Logger.getLogger(SysAidConnector.class);
 
-  private String sysaid_URL;
-  private String sysaid_Username;
-  private String sysaid_Password;
-  private String session_id;
+  private String sysaid_formID;
+  private String sysaid_accountID;
+  private String sysaid_webformurl;
 
   HashMap<String, String> configuration = new HashMap<String, String>();
 
-  private HashMap<String, HashMap<String, String>> dropdownList = new HashMap<String, HashMap<String, String>>();
-
-  public String getSysaid_URL() {
-    return sysaid_URL;
-  }
-
-  public void setSysaid_URL(String sysaid_URL) {
-    this.sysaid_URL = sysaid_URL;
-  }
-
-  public String getSysaid_Username() {
-    return sysaid_Username;
-  }
-
-  public void setSysaid_Username(String sysaid_Username) {
-    this.sysaid_Username = sysaid_Username;
-  }
-
-  public String getSysaid_Password() {
-    return sysaid_Password;
-  }
-
-  public void setSysaid_Password(String sysaid_Password) {
-    this.sysaid_Password = sysaid_Password;
-  }
-
-  public String getSession_id() {
-    return session_id;
-  }
-
-  public void setSession_id(String session_id) {
-    this.session_id = session_id;
-  }
-
-  public SysAidConnector(String url, String login, String password) {
-    this.sysaid_URL = url;
-    this.sysaid_Username = login;
-    this.sysaid_Password = password;
-  }
-
-  /***
-   * Default Constructor, While creating an object the configuration for SysAid
-   * is loaded to the object. Using the credentials from the configuration
-   * settings user is validated. If validation fails custom exceptions is thrown
-   * since further connection with SysAid is not possible.
-   * <p>
-   * After authenticating the user all the Drop down list from SysAid is
-   * populated so that it can be used for further request
-   *
-   * @throws SysAidLoginException
-   */
-  public void sysAidLogin() throws SysAidLoginException {
-    this.authenticate();
-    this.getAllDropDownList();
-  }
-
-  /***
-   * Default Constructor, While creating an object the configuration for SysAid
-   * is loaded to the object and the field mapping configuration is also loaded.
-   * If a session is already created use the same session id instead of creating
-   * a new session.
-   * <p>
-   * After authenticating the user all the drop down list from SysAid is
-   * populated so that it can be used for further request
-   *
-   * @throws SysAidLoginException
-   */
-  public SysAidConnector(String url, String session_id) {
-    this.session_id = session_id;
-    this.sysaid_URL = url;
-    this.getAllDropDownList();
+  public SysAidConnector(String url, String accountid, String formID) {
+    this.sysaid_webformurl = url;
+    this.sysaid_accountID = accountid;
+    this.sysaid_formID = formID;
   }
 
   /***
@@ -153,280 +77,48 @@ public class SysAidConnector {
   }
 
   /***
-   * Authenticate the user id with SysAid and get session id to be used for
-   * further request process. If the authentication fails throw custom
-   * SysAidlogin exception.
-   *
-   * @throws SysAidLoginException
-   ***/
-  public void authenticate() throws SysAidLoginException {
-
-    try {
-
-      JSONObject loginCredentials = new JSONObject();
-      loginCredentials.put("user_name", this.sysaid_Username);
-      loginCredentials.put("password", this.sysaid_Password);
-
-      HttpResponse response = this.postRequest(loginCredentials, this.sysaid_URL + "login");
-      HttpEntity entity = response.getEntity();
-      String responseString = EntityUtils.toString(entity, "UTF-8");
-
-      JSONObject json_result = new JSONObject(responseString);
-      if (json_result.has("status") && json_result.getString("status").equalsIgnoreCase("401")) {
-        throw new SysAidLoginException("Invalid User. Authentication Failed");
-      }
-      this.session_id = parseSessionID(response);
-
-    } catch (JSONException e) {
-      log.error("JSONException occured while attempting to "
-          + "authenticate SysAid Login. Authentication Failed ", e);
-    } catch (ParseException e) {
-      log.error("ParseException occured while attempting to "
-          + "authenticate SysAid Login. Authentication Failed ", e);
-    } catch (IOException e) {
-      log.error("IOException occured while attempting to "
-          + "authenticate SysAid Login. Authentication Failed ", e);
-    }
-  }
-
-  /***
-   * Get Session ID from cookies from HTTP response. The session id is under
-   * header parameter "Set-Cookie" with key JSESSIONID
-   *
-   * @param response
-   */
-  private String parseSessionID(HttpResponse response) {
-
-    Header header = response.getFirstHeader("Set-Cookie");
-    String value = header.getValue();
-    if (value.contains("JSESSIONID")) {
-      int index = value.indexOf("JSESSIONID=");
-      int endIndex = value.indexOf(";", index);
-      String sessionID = value.substring(
-          index + "JSESSIONID=".length(), endIndex);
-      if (sessionID != null) {
-        return sessionID;
-      }
-    }
-    return null;
-
-  }
-
-  /***
    * Create Service Request in SysAid using the value map sent from WuFoo. The
-   * map is compared with the field mapping map and converted to the fields
-   * SysAid expects and sent to SysAid as JSON info parameters
+   * map is compared with the field mapping map
    *
    * @return ServiceRequest_ID
    * @throws FormMappingException
+   * @throws SysAidConnectorException
    */
-  public String createServiceRequest(HashMap<String, String> values, String resource) throws FormMappingException {
+  public void createServiceRequest(HashMap<String, String> values, String resource)
+      throws FormMappingException, SysAidConnectorException {
 
     this.LoadWufooSysaidMapping(resource);
 
     try {
 
-      JSONObject infoFields = new JSONObject();
-
+      DefaultHttpClient client = new DefaultHttpClient();
       HashMap<String, String> fieldMappings = fieldMapping(values);
-      JSONArray sysAidFieldsinfo = this.convertMaptoJSON(fieldMappings);
+      List<NameValuePair> fields = extractFields_SysAid(fieldMappings);
 
-      infoFields.put("info", sysAidFieldsinfo);
-      HttpResponse response = this.postRequest(infoFields, this.sysaid_URL + "/sr");
-      HttpEntity entity = response.getEntity();
+      HttpPost httpPost = new HttpPost(this.sysaid_webformurl);
+      httpPost.setEntity(new UrlEncodedFormEntity(fields, "UTF-8"));
+      HttpResponse response = client.execute(httpPost);
 
-      String responseString = EntityUtils.toString(entity, "UTF-8");
-      JSONObject json_result = new JSONObject(responseString);
-      log.info("Service Request Created in SysAid, ID:" + json_result.getString("id"));
-
-      return json_result.getString("id");
-
-    } catch (JSONException e) {
-      log.error("JSONException occured while attempting to "
-          + "create service request. Method:createServiceRequest.", e);
-      return null;
+      if (response != null) {
+        log.info("Response: \n" + response.toString());
+      } else {
+        log.info("Unable to execute POST request.\nRequest parameters: \n"
+            + fields);
+      }
     } catch (ParseException e) {
       log.error("ParseException occured while attempting to "
           + "create service request. Method:createServiceRequest.", e);
-      return null;
     } catch (IOException e) {
       log.error("IOException occured while attempting to"
           + " create service request. Method:createServiceRequest", e);
-      return null;
-    }
-
-  }
-
-  /***
-   * This method is used to post a request to the SySAid end point. Before
-   * posting the request the session id from the object is added to the request.
-   * This acts as access token for all the post request made to SysAid
-   */
-  public HttpResponse postRequest(JSONObject paramaters, String endpoint) {
-    try {
-
-      HttpPost httpPost = new HttpPost(endpoint);
-      if (this.session_id != null) {
-        httpPost.setHeader("Cookie", "JSESSIONID=" + this.session_id + "; Path=/; Secure; HttpOnly");
-      }
-
-      StringEntity entity = new StringEntity(paramaters.toString(), HTTP.UTF_8);
-      entity.setContentType("application/json");
-      httpPost.setEntity(entity);
-
-      DefaultHttpClient client = new DefaultHttpClient();
-      HttpResponse response = client.execute(httpPost);
-      return response;
-
-    } catch (UnsupportedEncodingException e) {
-      log.error("UnsupportedEncodingException occured while attempting to "
-          + "execute POST request. Ensure the coding used is proper ", e);
-      return null;
-
-    } catch (ClientProtocolException e) {
-      log.error("ClientProtocolException occured while attempting to "
-          + "execute POST request. Ensure this service is properly "
-          + "configured and that the server you are attempting to make "
-          + "a request to is currently running.", e);
-      return null;
-
-    } catch (IOException e) {
-      log.error("IOException occured while attempting to "
-          + "execute POST request.", e);
-      e.printStackTrace();
-      return null;
-
-    }
-
-  }
-
-  /***
-   * This method is used to get request to the SySAid end point. Before sending
-   * the request the session id from the object is added to the request. This
-   * acts as access token for all the post request made to SysAid
-   */
-  public HttpResponse getRequest(String endpoint) {
-
-    try {
-
-      HttpGet httpget = new HttpGet(endpoint);
-      if (this.session_id != null) {
-        httpget.setHeader("Cookie", "JSESSIONID=" + this.session_id + "; Path=/; Secure; HttpOnly");
-      }
-
-      DefaultHttpClient client = new DefaultHttpClient();
-      HttpResponse response = client.execute(httpget);
-      return response;
-
-    } catch (UnsupportedEncodingException e) {
-      log.error("UnsupportedEncodingException occured while attempting to "
-          + "execute GET request. Ensure the coding used is proper ", e);
-      return null;
-
-    } catch (ClientProtocolException e) {
-      log.error("ClientProtocolException occured while attempting to "
-          + "execute GET request. Ensure this service is properly "
-          + "configured and that the server you are attempting to make "
-          + "a request to is currently running.", e);
-      return null;
-
-    } catch (IOException e) {
-      log.error("IOException occured while attempting to "
-          + "execute GET request.", e);
-      return null;
-
-    }
-
-  }
-
-  /***
-   * Connect to SysAid and get all the List that is being used. SysAid expects
-   * the numerical value for many fields and this list will be used to get the
-   * numerical value for the corresponding text value for each field
-   */
-  public void getAllDropDownList() {
-    HttpResponse response = this.getRequest(this.sysaid_URL + "list");
-    HttpEntity entity = response.getEntity();
-    String responseString;
-    try {
-      responseString = EntityUtils.toString(entity, "UTF-8");
-      JSONArray list_response = new JSONArray(responseString);
-
-      for (int i = 0; i < list_response.length(); i++) {
-
-        JSONObject list = list_response.getJSONObject(i);
-        JSONArray values = (JSONArray) list.get("values");
-
-        HashMap<String, String> list_map = new HashMap<String, String>();
-        for (int j = 0; j < values.length(); j++) {
-          JSONObject value = values.getJSONObject(j);
-          list_map.put(value.getString("caption"), value.getString("id"));
-        }
-        dropdownList.put(list.getString("id"), list_map);
-      }
     } catch (JSONException e) {
-      log.error("JSONException occured while attempting to "
-          + "populate Dropdown list.", e);
-    } catch (ParseException e) {
-      log.error("ParseException occured while attempting to "
-          + "populate Dropdown list.", e);
-    } catch (IOException e) {
-      log.error("IOException occured while attempting to "
-          + "populate Dropdown list.", e);
+      log.error("JSONException occured while attempting to"
+          + " create service request. Method:createServiceRequest", e);
+    } catch (IllegalStateException e) {
+      log.error("IllegalStateException occured while attempting to"
+          + " create service request. Method:createServiceRequest", e);
     }
-  }
 
-  /****
-   * Convert fields in HasHmap to JSONArray
-   *
-   * @throws JSONException
-   */
-  public JSONArray convertMaptoJSON(Map<String, String> mp) throws JSONException {
-
-    JSONArray fields = new JSONArray();
-    Iterator<Entry<String, String>> it = mp.entrySet().iterator();
-    while (it.hasNext()) {
-
-      Entry<String, String> pair = it.next();
-
-      JSONObject obj = new JSONObject();
-      obj.put("value", pair.getValue());
-      obj.put("key", pair.getKey());
-      fields.put(obj);
-    }
-    return fields;
-  }
-
-  /**
-   * Search the Hash map for a particular key under a list
-   */
-  public String getDropdownValues(String listKey, String key) {
-
-    if (dropdownList.containsKey(listKey)) {
-      HashMap<String, String> map = dropdownList.get(listKey);
-      if (map.containsKey(key)) {
-        return map.get(key);
-      }
-    }
-    return "";
-  }
-
-  /**
-   * Search the Hash map for a particular key under a list
-   */
-  public boolean isDropdownValueExist(String listKey, String value) {
-
-    if (dropdownList.containsKey(listKey)) {
-      HashMap<String, String> map = dropdownList.get(listKey);
-      for (Map.Entry<String, ?> entry : map.entrySet()) {
-        String Dropdown_value = (String) entry.getValue();// Value from WuFoo
-        if (Dropdown_value.equalsIgnoreCase(value)) {
-          return true;
-        }
-      }
-
-    }
-    return false;
   }
 
   /****
@@ -451,53 +143,28 @@ public class SysAidConnector {
     for (String wufooField : wufooFields) {
 
       String sysAidField = configuration.get(wufooField + ".fieldmapping");
-      String sysAidFieldType = configuration.get(wufooField + ".fieldtype");
 
-      // If the SysAidFieldType is Drop down Loop find the actual value from the
-      // list of drop down values already loaded
-      if (sysAidFieldType.equalsIgnoreCase("Dropdown")) {
+      // If the SysAidFieldType is Text Check if the field is a Default field.
+      // If its a default field append the values, if not overwrite the values
+      // in the field.
+      if (sysAidDefaultField.equalsIgnoreCase(sysAidField)) {
 
-        if (dropdownList.containsKey(sysAidField)) {
-          String dropdownValue = getDropdownValues(sysAidField, values.get(wufooField));
-          finalValues.put(sysAidField, dropdownValue);
-        }
+        if (finalValues.containsKey(sysAidField)) {
 
-        // If the SysAidFieldType is User Drop down Loop find the actual value
-        // by passing the field key to the List of User loaded into cache to get
-        // the User ID
-      } else if (sysAidFieldType.equalsIgnoreCase("UserDropdown")) {
+          String current_value = finalValues.get(sysAidField);
+          String value = wufooField + " : " + values.get(wufooField);
+          current_value = current_value + "\n" + value;
+          finalValues.put(sysAidField, current_value);
 
-        String wufoofieldKey = configuration.get(wufooField + ".fieldkey");
-        JSONObject userObject = SysAidUsers.getInstance(this.sysaid_URL, this.session_id).getUserbyKey(wufoofieldKey,
-            values.get(wufooField));
-
-        if (userObject != null) {
-          finalValues.put(sysAidField, userObject.getString("id"));
+        } else {
+          String value = wufooField + " : " + values.get(wufooField);
+          finalValues.put(sysAidField, value);
         }
 
       } else {
-        // If the SysAidFieldType is Text Check if the field is a Default field.
-        // If its a default field append the values, if not overwrite the values
-        // in the field.
-        if (sysAidDefaultField.equalsIgnoreCase(sysAidField)) {
-
-          if (finalValues.containsKey(sysAidField)) {
-
-            String current_value = finalValues.get(sysAidField);
-            String value = wufooField + " : " + values.get(wufooField);
-            current_value = current_value + "\n" + value;
-            finalValues.put(sysAidField, current_value);
-
-          } else {
-            String value = wufooField + " : " + values.get(wufooField);
-            finalValues.put(sysAidField, value);
-          }
-
-        } else {
-          finalValues.put(sysAidField, values.get(wufooField));
-        }
-
+        finalValues.put(sysAidField, values.get(wufooField));
       }
+
     }
 
     // From the List of SysAid Fields from mapping file
@@ -534,53 +201,41 @@ public class SysAidConnector {
 
   }
 
-  /***
-   * Main method for testing the application
+  /****
+   * Extract Fields for SysAid web form Format. Constructs a list of parameters
+   * from a Request element. These parameters follow the format used by SysAid
+   * to submit web forms and can be used to create an UrlEncodedFormEntity.
    *
-   * @param args
+   * @param fieldMappings
+   * @return
+   * @throws SysAidConnectorException
    */
-  public static void main(String args[]) {
+  protected List<NameValuePair> extractFields_SysAid(HashMap<String, String> fieldMappings)
+      throws SysAidConnectorException {
 
-    SysAidConnector sysaid = new SysAidConnector("", "", "");
+    List<NameValuePair> fields = new ArrayList<NameValuePair>();
 
-  }
-
-  /***
-   * Dummy Data for testing purpose
-   */
-  public HashMap<String, String> testData() {
-
-    HashMap<String, String> fields = new HashMap<String, String>();
-    fields.put("due_date", "1461384000000");
-    fields.put("status", "5");
-    fields.put("priority", "1");
-    fields.put("description", "This is created from Rest API");
-    fields.put("responsibility", "1222");
-    fields.put("request_user", "1222");
-    fields.put("title", " created from Rest api");
-    return fields;
-  }
-
-  /**
-   * Method to print values in hash map for debugging
-   *
-   * @param parameters
-   */
-  @SuppressWarnings("unchecked")
-  public void printingMap(Map<String, ?> parameters) {
-
-    for (Map.Entry<String, ?> entry : parameters.entrySet()) {
-      if (entry.getValue() instanceof List<?>) {
-        String value = "";
-        for (int i = 0; i < ((Map<String, List<String>>) entry.getValue()).size(); i++) {
-          value = value + ((List<String>) entry.getValue()).get(i);
-        }
-        log.info(entry.getKey() + ":" + value);
-      } else {
-        log.info(entry.getKey() + ":" + entry.getValue());
-      }
-
+    if (this.sysaid_accountID == null || this.sysaid_accountID.equals("")) {
+      throw new SysAidConnectorException(
+          "SysAid Account ID information not found. Please verify wufooConnector configuration");
     }
+    if (this.sysaid_formID == null || this.sysaid_formID.equals("")) {
+      throw new SysAidConnectorException(
+          "SysAid Form ID information not found. Please verify wufooConnector configuration");
+    }
+    if (this.sysaid_webformurl == null || this.sysaid_webformurl.equals("")) {
+      throw new SysAidConnectorException(
+          "SysAid Webform url not found. Please verify wufooConnector configuration");
+    }
+
+    fields.add(new BasicNameValuePair("accountID", sysaid_accountID));
+    fields.add(new BasicNameValuePair("formID", sysaid_formID));
+
+    for (Map.Entry<String, String> entry : fieldMappings.entrySet()) {
+      fields.add(new BasicNameValuePair(entry.getKey(), entry.getValue()));
+    }
+    return fields;
+
   }
 
 }

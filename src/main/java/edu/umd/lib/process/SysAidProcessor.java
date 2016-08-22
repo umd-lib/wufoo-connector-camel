@@ -10,7 +10,6 @@ import org.apache.log4j.Logger;
 import com.google.common.base.Splitter;
 
 import edu.umd.lib.exception.FormMappingException;
-import edu.umd.lib.exception.SysAidLoginException;
 import edu.umd.lib.services.SysAidConnector;
 
 /**
@@ -30,17 +29,16 @@ public class SysAidProcessor implements Processor {
   SysAidConnector sysaid;
 
   /****
-   * SysAidProcessor Constructor which connects to SysAid using URL, login and
-   * password parameters
+   * SysAidProcessor Constructor
    *
    * @param url
-   * @param login
-   * @param password
+   * @param accountId
+   * @param formid
    * @param formmapping
    * @throws SysAidLoginException
    */
-  public SysAidProcessor(String url, String login, String password, String formmapping) throws SysAidLoginException {
-    sysaid = new SysAidConnector(url, login, password);
+  public SysAidProcessor(String url, String accountId, String formid, String formmapping) {
+    sysaid = new SysAidConnector(url, accountId, formid);
     if (formmapping != null && !formmapping.equalsIgnoreCase("")) {
       wufoo_sysaid_map = this.parseMap(formmapping);
     }
@@ -64,8 +62,6 @@ public class SysAidProcessor implements Processor {
   @Override
   public void process(Exchange exchange) throws Exception {
 
-    sysaid.setSession_id(null);
-    sysaid.sysAidLogin();
     log.info("Processing new request to SysAid");
     HashMap<String, String> message = exchange.getIn().getBody(HashMap.class);
 

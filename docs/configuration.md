@@ -38,9 +38,7 @@ sysaid.fields=request_user,description,title,responsibility
 Provide All the fields created in wuFoo Form including Hidden fields if any for the key 'wufoo.fields'. Provide the fields that will be impacted in SysAid including the fields which need defaults for the key 'sysaid.fields'.
 ```sh
 FIELDNAME.fieldMapping = Provide the SysAid field the field Should be mapped
-FIELDNAME.fieldType = Provide the SysAid field Type (Text|UserDropdown|Dropdown)
 ```
-If fieldType is UserDropdown also provide FIELDNAME.fieldKey (Based on the key the user id will be mapped)
 The SysAid integration also supports defaults.
 When a default value should be populated in SysAid for all the entries from a wufoo form defaults for the SysAid field can be set in the configuration file.
 ```sh
@@ -48,3 +46,27 @@ Sysaid.defaultfield=description
 sysaid.defaults.responsibility=1221
 #responsiblity is sysaid field for which default of 1221 will be assigned.
 ```
+
+### SysAid Configuration 
+The Values for SysAid Properties can be found under system admin menu in SysAID.
+Steps to find SysAid Configuration information.
+
+* Login to SysAid
+* Click on Gear icon on the top header.
+* Click on Customize Menu on left menu.
+* Choose Web forms from the child menu.
+* The Page provides list of forms available. 
+* Click on any form and view the source code.
+* Find the hidden input field with name formID for form ID value
+```
+ <input type="hidden" name="formID" value="8cb90ec:1565644c31d:-7ffb" />
+
+```
+* Find the form action tag with name 'frm'. This value should be used for webform url value.
+```
+ <form action="https://libticketingdev.umd.edu/webformsubmit?pageEncoding=utf-8" method="post" name="frm">
+
+```
+* Click on your name on the top header and select about from the menu options.
+* Account ID can be found with field title Account Name.
+* SysAid url can be found with field title server url.

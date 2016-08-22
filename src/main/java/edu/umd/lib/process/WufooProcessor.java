@@ -21,7 +21,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import edu.umd.lib.exception.CamelHandShakeException;
-import edu.umd.lib.exception.SysAidLoginException;
 
 /**
  * WufooProcessor process the request from WuFoo by parsing the request then
@@ -203,6 +202,9 @@ public class WufooProcessor implements Processor {
           } else {
             combined_value = combined_value + " " + fields.get(subfield.getString("ID"));
           }
+          subfield.put("Value", fields.get(field.get("ID")));
+          subfield.put("Title", subfield.get("Label"));
+          fieldsList.put(subfield);
         }
         field.put("Value", combined_value);
       } else {

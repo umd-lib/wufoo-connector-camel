@@ -228,6 +228,11 @@
                   <type>cfg</type>
                   <classifier>configuration</classifier>
                 </artifact>
+                <artifact>
+                    <file>${project.build.outputDirectory}/wufoo-sysaid-field-mapping-sample.properties</file>
+                    <type>cfg</type>
+                   <classifier>field-mapping</classifier>
+                </artifact>
               </artifacts>
             </configuration>
           </execution>

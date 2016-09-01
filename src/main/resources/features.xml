@@ -1,0 +1,17 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<features xmlns="http://karaf.apache.org/xmlns/features/v1.3.0" name="wufoo-connector-camel-${project.version}">
+  <repository>mvn:org.apache.camel.karaf/apache-camel/${camel.version}/xml/features</repository>
+
+  <feature name="wufoo-connector-camel" version="${project.version}" start-level="50">
+    <details>Installs the Wufoo Connector Camel Route</details>
+    <bundle>mvn:edu.umd.lib/wufoo-connector-camel/${project.version}</bundle>
+    <bundle dependency="true">wrap:mvn:org.json/json/20090211</bundle>
+    <feature version="${camel.version}">camel</feature>
+    <feature version="${camel.version}">camel-http4</feature>
+    <feature version="${camel.version}">camel-jetty</feature>
+    <feature version="${camel.version}">camel-mail</feature>
+    <feature version="${camel.version}">camel-spring</feature>
+    <configfile finalname="/etc/edu.umd.lib.wufooconnectorcamel.cfg">mvn:edu.umd.lib/wufoo-connector-camel/${project.version}/cfg/configuration</configfile>
+    <configfile finalname="/etc/wufoo-sysaid-field-mapping-sample.properties">mvn:edu.umd.lib/wufoo-connector-camel/${project.version}/cfg/field-mapping</configfile>
+    </feature>  
+</features>

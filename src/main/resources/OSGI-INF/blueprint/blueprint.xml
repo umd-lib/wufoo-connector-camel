@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:cm="http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0"
+       xsi:schemaLocation="
+       http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0 http://aries.apache.org/schemas/blueprint-cm/blueprint-cm-1.1.0.xsd
+       http://www.osgi.org/xmlns/blueprint/v1.0.0 http://www.osgi.org/xmlns/blueprint/v1.0.0/blueprint.xsd
+       http://camel.apache.org/schema/blueprint http://camel.apache.org/schema/blueprint/camel-blueprint.xsd">
+   
+  <!-- OSGI blueprint property placeholder -->
+  <cm:property-placeholder id="properties" persistent-id="edu.umd.lib.wufooconnectorcamel" update-strategy="reload">
+    <cm:default-properties>
+      <cm:property name="default.domain" value="http://localhost:8080/"/>
+      <cm:property name="default.routename" value="route"/>
+      <cm:property name="default.servicename" value="servicename"/>
+      <cm:property name="wufoo.routename" value="wufoo"/>
+      <cm:property name="wufoo.servicename" value="wufoo-listener"/>
+      <cm:property name="wufoo.handshake_key" value="testing"/>
+      <cm:property name="camel.maximum_tries" value="3"/>
+      <cm:property name="camel.redelivery_delay" value="1000"/>
+      <cm:property name="camel.backoff_multiplier" value="2"/>
+      <cm:property name="camel.maximum_redelivery_delay" value="6000"/>
+      <cm:property name="email.from" value=""/>
+      <cm:property name="email.to" value=""/>
+      <cm:property name="email.uri" value="smtp://localhost:25"/>
+      <cm:property name="wufoo.sysaid.mapping" value=""/>
+   	  <cm:property name="sysaid.webformurl" value=""/>
+   	  <cm:property name="sysaid.accountid" value=""/>
+   	  <cm:property name="sysaid.formid" value=""/>
+    </cm:default-properties>
+  </cm:property-placeholder> 
+
+  <bean id="smtp" class="org.apache.camel.component.mail.MailComponent"/>
+
+  <bean id="wufoo-listener" class="edu.umd.lib.routes.WufooListener">
+    <property name="handshake" value="${wufoo.handshake_key}" />
+    <property name="sysaidwebformurl" value="${sysaid.webformurl}" />
+    <property name="sysaidaccountid" value="${sysaid.accountid}" />
+    <property name="sysaidformid" value="${sysaid.formid}" />
+    <property name="formmapping" value="${wufoo.sysaid.mapping}" />
+  </bean>
+
+  <camelContext id="WufooConnectorCamel" xmlns="http://camel.apache.org/schema/blueprint">
+    <propertyPlaceholder id="placeholder" location="edu.umd.lib.wufooconnectorcamel.cfg"/>
+    <routeBuilder ref="wufoo-listener" />
+  </camelContext>
+
+</blueprint>

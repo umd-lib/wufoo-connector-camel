@@ -5,7 +5,7 @@
 
   <groupId>edu.umd.lib</groupId>
   <artifactId>wufoo-connector-camel</artifactId>
-  <version>1.0</version>
+  <version>1.1-SNAPSHOT</version>
 
   <name>Wufoo Connector - Camel Route</name>
   <packaging>bundle</packaging>

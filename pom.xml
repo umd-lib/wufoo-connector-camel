@@ -5,7 +5,7 @@
 
   <groupId>edu.umd.lib</groupId>
   <artifactId>wufoo-connector-camel</artifactId>
-  <version>1.0</version>
+  <version>1.1</version>
 
   <name>Wufoo Connector - Camel Route</name>
   <packaging>bundle</packaging>
@@ -17,6 +17,8 @@
     <slf4j.version>1.7.10</slf4j.version>
     <log4j.version>1.2.17</log4j.version>
     <spring.version>3.2.2.RELEASE</spring.version>
+    <commons-configuration-version>1.10</commons-configuration-version>
+    <commons-lang-version>2.6</commons-lang-version>
   </properties>
   
   <distributionManagement>
@@ -62,20 +64,20 @@
       <version>${camel.version}</version>
       <scope>test</scope>
     </dependency>
-    
+
      <dependency>
       <groupId>org.apache.camel</groupId>
       <artifactId>camel-jetty</artifactId>
       <version>${camel.version}</version>
     <!-- use the same version as your Camel core version -->
      </dependency>
-    
+
     <dependency>
       <groupId>org.json</groupId>
       <artifactId>json</artifactId>
       <version>20090211</version>
 	</dependency>
-	
+
 	<!-- Spring -->
 	<dependency>
 		<groupId>org.springframework</groupId>
@@ -102,42 +104,48 @@
 		<artifactId>spring-context-support</artifactId>
 		<version>${spring.version}</version>
 	</dependency>
-	
+
 	<dependency>
 		<groupId>org.apache.camel</groupId>
 		<artifactId>camel-spring</artifactId>
 		<version>${camel.version}</version>
 	</dependency>
+
 	<dependency>
 		<groupId>org.apache.camel</groupId>
 		<artifactId>camel-http</artifactId>
 		<version>${camel.version}</version>
 	</dependency>
-	
+
 	<dependency>
 		<groupId>org.apache.camel</groupId>
 		<artifactId>camel-spring-javaconfig</artifactId>
 		<version>${camel.version}</version>
 	</dependency>
-	
+
 	<dependency>
 		<groupId>org.apache.httpcomponents</groupId>
 		<artifactId>httpclient</artifactId>
 		<version>4.0-beta1</version>
 	</dependency>
-	
+
 	<dependency>
 	    <groupId>org.apache.camel</groupId>
 	    <artifactId>camel-mail</artifactId>
 	    <version>${camel.version}</version>
 	</dependency>
-	
+
 	<dependency>
 	  <groupId>com.google.guava</groupId>
 	  <artifactId>guava</artifactId>
 	  <version>19.0</version>
 	</dependency>
-    
+
+	<dependency>
+	  <groupId>commons-configuration</groupId>
+	  <artifactId>commons-configuration</artifactId>
+	  <version>${commons-configuration-version}</version>
+	</dependency>
   </dependencies>
 
   <build>

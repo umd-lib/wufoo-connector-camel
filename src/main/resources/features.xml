@@ -6,6 +6,8 @@
     <details>Installs the Wufoo Connector Camel Route</details>
     <bundle>mvn:edu.umd.lib/wufoo-connector-camel/${project.version}</bundle>
     <bundle dependency="true">wrap:mvn:org.json/json/20090211</bundle>
+    <bundle dependency="true">mvn:commons-configuration/commons-configuration/${commons-configuration-version}</bundle>
+    <bundle dependency="true">mvn:commons-lang/commons-lang/${commons-lang-version}</bundle>
     <feature version="${camel.version}">camel</feature>
     <feature version="${camel.version}">camel-http4</feature>
     <feature version="${camel.version}">camel-jetty</feature>

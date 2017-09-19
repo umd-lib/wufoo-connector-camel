@@ -19,6 +19,7 @@
     <spring.version>3.2.2.RELEASE</spring.version>
     <commons-configuration-version>1.10</commons-configuration-version>
     <commons-lang-version>2.6</commons-lang-version>
+    <stringtemplate-version>4.0.8</stringtemplate-version>
   </properties>
   
   <distributionManagement>
@@ -146,6 +147,13 @@
 	  <artifactId>commons-configuration</artifactId>
 	  <version>${commons-configuration-version}</version>
 	</dependency>
+
+  <dependency>
+    <groupId>org.antlr</groupId>
+    <artifactId>ST4</artifactId>
+	  <version>${stringtemplate-version}</version>
+</dependency>
+
   </dependencies>
 
   <build>

@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
@@ -19,6 +20,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
 import org.json.JSONException;
+import org.stringtemplate.v4.ST;
 
 import edu.umd.lib.exception.FormMappingException;
 import edu.umd.lib.exception.SysAidConnectorException;
@@ -37,15 +39,7 @@ public class SysAidConnector {
 
   private final Logger log = Logger.getLogger(SysAidConnector.class);
 
-  private final String FIELD_MAPPING_SUFFIX = ".fieldmapping";
-  private final String INCLUDE_LABEL_INFIX = ".includelabel";
-  private final String SYSAID_DEFAULTS_PREFIX = "sysaid.defaults";
-  private final String SYSAID_JOINER_PREFIX = "sysaid.joiner.";
-  private final String SYSAID_DESC_SUFFIX = "sysaid.desc.suffix";
-  private final String SYSAID_TITLE_PREFIX = "sysaid.title.prefix";
-  private final String SYSAID_DEFAULT_JOINER = " ";
-  private final String TITLE_FIELD = "title";
-  private final String DESC_FIELD = "desc";
+  private final String SYSAID_FIELD_PREFIX = "sysaid.";
 
   private final String sysaid_formID;
   private final String sysaid_accountID;
@@ -123,67 +117,6 @@ public class SysAidConnector {
 
   }
 
-  /**
-   * Returns either the value or the concatenated "label: value" based on the presence of the INCLUDE_LABEL_INFIX in the
-   * fieldmapping key.
-   * 
-   * @param wufooValues
-   *          - HashMap containing the key-values from wufoo form submission
-   * @param key
-   *          - The key whose formatted value to be returned
-   * @return
-   */
-  private String getFormattedWufooValue(HashMap<String, String> wufooValues, String key) {
-    int wufooKeyLength = key.length() - FIELD_MAPPING_SUFFIX.length();
-    boolean includeLabel = key.contains(INCLUDE_LABEL_INFIX);
-    if (includeLabel) {
-      wufooKeyLength = wufooKeyLength - INCLUDE_LABEL_INFIX.length();
-    }
-    String wufooKey = key.substring(0, wufooKeyLength);
-    String wufooValue = wufooValues.get(wufooKey);
-    if (wufooValue != null && !wufooValue.isEmpty()) {
-      if (includeLabel) {
-        return wufooKey + ": " + wufooValue;
-      }
-      return wufooValue;
-    } else {
-      return "";
-    }
-  }
-
-  /**
-   * Concatenated value of the current and new sysaid value joined using either the default or the configured joiner
-   * string.
-   * 
-   * @param sysaidKey
-   *          - Key for which joiner configuration needs to checked.
-   * @param currentValue
-   * @param newValue
-   * @return
-   */
-  private String getJoinedSysaidValue(String sysaidKey, String currentValue, String newValue) {
-    String joiner = configuration.getString(SYSAID_JOINER_PREFIX + sysaidKey, SYSAID_DEFAULT_JOINER);
-    return currentValue + joiner + newValue;
-  }
-
-  /**
-   * Add or append value based on existence of value for the key in the given map.
-   * 
-   * @param map
-   * @param key
-   * @param value
-   * @return
-   */
-  private HashMap<String, String> addOrAppend(HashMap<String, String> map, String key, String value) {
-    if (map.containsKey(key)) {
-      String currentValue = map.get(key);
-      map.put(key, getJoinedSysaidValue(key, currentValue, value));
-    } else {
-      map.put(key, value);
-    }
-    return map;
-  }
-
   /****
    * Mapping WuFoo fields with SysAid fields based on the mapping specified in the mapping configuration and default
    * values configuration.
@@ -195,11 +128,14 @@ public class SysAidConnector {
   public HashMap<String, String> fieldMapping(HashMap<String, String> wufooValues) throws JSONException {
 
     HashMap<String, String> sysaidValues = new HashMap<String, String>();
+    HashMap<String, String> nonEmptyArgs = new HashMap<String, String>();
+    List<String> blankFields = new ArrayList<String>();
 
-    if (configuration.containsKey(SYSAID_TITLE_PREFIX)) {
-      String titlePrefix = configuration.getString(SYSAID_TITLE_PREFIX, "");
-      if (!titlePrefix.isEmpty()) {
-        sysaidValues.put(TITLE_FIELD, titlePrefix);
+    for (String key : wufooValues.keySet()) {
+      if (wufooValues.get(key).isEmpty()) {
+        blankFields.add(key);
+      } else {
+        nonEmptyArgs.put(key, wufooValues.get(key));
       }
     }
 
@@ -207,43 +143,49 @@ public class SysAidConnector {
     Iterator<String> mappingKeys = configuration.getKeys();
     while (mappingKeys.hasNext()) {
       String key = mappingKeys.next();
-      if (key.endsWith(FIELD_MAPPING_SUFFIX)) {
-        String wufooValue = getFormattedWufooValue(wufooValues, key);
+      if (key.startsWith(SYSAID_FIELD_PREFIX)) {
+        String wufooValue = renderedTemplate(configuration.getString(key), nonEmptyArgs, blankFields);
         if (!wufooValue.isEmpty()) {
-          // wufoo key => sysaidKey1,sysaidKey2,sysaidKey3...
-          for (String sysaidKey : configuration.getStringArray(key)) {
-            addOrAppend(sysaidValues, sysaidKey, wufooValue);
-          }
+          sysaidValues.put(key.substring(SYSAID_FIELD_PREFIX.length()), wufooValue);
         }
       }
     }
-
-    // Populate default values
-    Iterator<String> sysaidDefaultsKeys = configuration.getKeys(SYSAID_DEFAULTS_PREFIX);
-    while (sysaidDefaultsKeys.hasNext()) {
-      String defaultKey = sysaidDefaultsKeys.next();
-      String key = defaultKey.substring(SYSAID_DEFAULTS_PREFIX.length() + 1);
-      if (sysaidValues.containsKey(key)) {
-        // Sysaid field already set from a wufoo form value
-        // Don't need to assign the default value
-        continue;
-      }
-      String defaultValue = configuration.getString(defaultKey, "");
-      if (!defaultValue.isEmpty()) {
-        sysaidValues.put(key, defaultValue);
-      }
-    }
-
-    if (configuration.containsKey(SYSAID_DESC_SUFFIX)) {
-      String descSuffix = configuration.getString(SYSAID_DESC_SUFFIX, "");
-      if (!descSuffix.isEmpty()) {
-        addOrAppend(sysaidValues, DESC_FIELD, descSuffix);
-      }
-    }
-
     // Return the Mapped SysAid field and Values
     return sysaidValues;
+  }
 
+  /**
+   * Render the template using the StringTemplate library. This replace the <FieldID> values
+   * in the template with the corresponding value from the args map. The <FieldID> of the
+   * arguments with empty values will be stripped from the template string prior to the rendering
+   * to correctly remove the punctuations associated with those <FieldID> without values.
+   * 
+   * @param template - The template string.
+   * @param args - The parameters to render the template.
+   * @param emptyFields - Fields (and associated punctuations) to be stripped from the template.
+   * 
+   * @return Rendered template string.
+   */
+  protected String renderedTemplate(String template, Map<String, String> args, List<String> emptyFields) {
+    log.debug("Template string: " + template);
+    if (!template.contains("<Field")) {
+      // No fields to be rendered so return template as the rendered string.
+      return template;
+    }
+    for (String field : emptyFields) {
+      // Remove Fields (and associated punctuations) that does not have a value in this submission.
+      template = template.replaceAll("<" + field + ">([,;] )?|([,;] )?<" + field + ">", "");
+    }
+    String renderedString = "";
+    ST st = new ST(template);
+    for(String key : args.keySet()) {
+      // Add all the arguments to the StringTemplate
+      st.add(key, args.get(key));
+    }
+    renderedString = st.render();
+    renderedString = renderedString.replaceAll("<Field[0-9]+>(, )?|(, )?<Field[0-9]+>", "");
+    log.debug("Rendered string: " + renderedString);
+    return renderedString;
   }
 
   /****

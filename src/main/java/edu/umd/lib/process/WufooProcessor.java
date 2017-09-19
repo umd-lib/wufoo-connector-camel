@@ -6,17 +6,13 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Properties;
-import java.util.Set;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.log4j.Logger;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -62,26 +58,31 @@ public class WufooProcessor implements Processor {
 
     String message = exchange.getIn().getBody(String.class);
 
-    Map<String, List<String>> parameters = getQueryParams(message);
+    Map<String, String> parameters = getQueryParams(message);
     checkHandshake(parameters);
     String formName = getHashvalue(parameters.get("FormStructure"));
-    Map<String, String> fields = getFields(parameters);
-    JSONArray fieldsList = getFieldStructure(parameters.get("FieldStructure"), fields);
-    HashMap<String, String> values = extractParameters(fieldsList);
-    values.put("Hash", formName);
-    exchange.getOut().setBody(values);
+    parameters.remove("FieldStructure");
+    ArrayList<String> nonFieldKeys = new ArrayList<String>();
+    for (String key : parameters.keySet()) {
+      if(!key.startsWith("Field")) {
+        nonFieldKeys.add(key);
+      }
+    }
+    parameters.keySet().removeAll(nonFieldKeys);
+    parameters.put("Hash", formName);
+    exchange.getOut().setBody(parameters);
 
   }
 
   /****
    * Get Form Name from the Wufoo Request
    *
-   * @param formStructureArray
+   * @param formStructureString
    * @return
    */
-  public String getHashvalue(List<String> formStructureArray) {
+  public String getHashvalue(String formStructureString) {
     try {
-      JSONObject formStructure = new JSONObject(formStructureArray.get(0).toString());
+      JSONObject formStructure = new JSONObject(formStructureString);
       return formStructure.getString("Hash");
     } catch (JSONException e) {
       log.error("JSONException occured while extracting form Hash value from Form Structure " +
@@ -97,11 +98,11 @@ public class WufooProcessor implements Processor {
    *          from the WuFoo Request @return Hash map with parameter name as key
    *          and field value as value @exception
    */
-  public Map<String, List<String>> getQueryParams(String queryString) {
+  public Map<String, String> getQueryParams(String queryString) {
 
     try {
 
-      Map<String, List<String>> params = new HashMap<String, List<String>>();
+      Map<String, String> params = new HashMap<String, String>();
 
       for (String param : queryString.split("&")) {
         String[] pair = param.split("=");
@@ -110,12 +111,11 @@ public class WufooProcessor implements Processor {
         if (pair.length > 1) {
           value = URLDecoder.decode(pair[1], "UTF-8");
         }
-        List<String> values = params.get(key);
-        if (values == null) {
-          values = new ArrayList<String>();
-          params.put(key, values);
+        String previousValue = params.get(key);
+        if (previousValue != null) {
+          value = previousValue + ", " + value;
         }
-        values.add(value);
+        params.put(key, value);
       }
       // printingMap(params);
       return params;
@@ -135,9 +135,9 @@ public class WufooProcessor implements Processor {
    *          Contains all the fields from request from the WuFoo Request
    * @exception CamelHandShakeException
    */
-  public void checkHandshake(Map<String, List<String>> parameters) throws CamelHandShakeException {
+  public void checkHandshake(Map<String, String> parameters) throws CamelHandShakeException {
 
-    String handshake = parameters.get("HandshakeKey").get(0);
+    String handshake = parameters.get("HandshakeKey");
     if (handshake == null) {
       throw new CamelHandShakeException("Wufoo Handshake key is empty.");
     } else if (this.handShakeKey == null) {
@@ -148,71 +148,6 @@ public class WufooProcessor implements Processor {
       log.info("Wufoo handshake and Camel HandShake Key Matches");
     }
 
-  }
-
-  /***
-   * From the list of all parameters filter only the fields required for SysAid
-   *
-   * @param Map
-   *          contains all fields
-   * @return Map Contains only fields related to SysAid Ticket
-   */
-  public Map<String, String> getFields(Map<String, List<String>> parameters) {
-    Map<String, String> fields = new HashMap<String, String>();
-    Set<String> parameterNames = parameters.keySet();
-    for (String name : parameterNames) {
-      if (name.contains("Field")) {
-        fields.put(name, parameters.get(name).get(0));
-      }
-    }
-    /* Removes field structure from fields map */
-    fields.remove("FieldStructure");
-    return fields;
-  }
-
-  /***
-   * WuFoo provides the field structure in each response. Use the field
-   * Structure to construct what fields the form contains in the request
-   *
-   * @param List
-   *          contains all fields
-   * @param Map
-   *          Contains fields that has values
-   */
-  public JSONArray getFieldStructure(List<String> fieldStructure,
-      Map<String, String> fields) throws JSONException {
-
-    JSONArray json = new JSONArray(fieldStructure);
-    JSONArray fieldsList = new JSONArray();
-
-    for (int m = 0; m < json.length(); m++) {
-      JSONObject jsonObject = new JSONObject(json.get(m).toString());
-      fieldsList = (JSONArray) jsonObject.get("Fields");
-    }
-    for (int i = 0; i < fieldsList.length(); i++) {
-      JSONObject field = fieldsList.getJSONObject(i);
-
-      if (field.has("SubFields")) {
-        String combined_value = "";
-        JSONArray subfields = (JSONArray) field.get("SubFields");
-        for (int j = 0; j < subfields.length(); j++) {
-          JSONObject subfield = subfields.getJSONObject(j);
-          if (j == 0) {
-            combined_value = fields.get(subfield.getString("ID"));
-          } else {
-            combined_value = combined_value + " " + fields.get(subfield.getString("ID"));
-          }
-          subfield.put("Value", fields.get(field.get("ID")));
-          subfield.put("Title", subfield.get("Label"));
-          fieldsList.put(subfield);
-        }
-        field.put("Value", combined_value);
-      } else {
-        field.put("Value", fields.get(field.get("ID")));
-      }
-
-    }
-    return fieldsList;
   }
 
   /***
@@ -241,28 +176,6 @@ public class WufooProcessor implements Processor {
   }
 
   /***
-   * The JSON from WuFoo contains details about each field. Get the field name
-   * and corresponding value from the JSON array and create a map with just
-   * field name as key and corresponding value as value.
-   *
-   * @param map
-   */
-  public HashMap<String, String> extractParameters(JSONArray values) {
-
-    HashMap<String, String> paramaters = new HashMap<String, String>();
-    try {
-      for (int i = 0; i < values.length(); i++) {
-        JSONObject value = (JSONObject) values.get(i);
-        paramaters.put(value.getString("Title"), value.getString("Value"));
-      }
-    } catch (JSONException e) {
-      log.error("JSONException occured while attempting to "
-          + "Extract parameters from JSONArray.", e);
-    }
-    return paramaters;
-  }
-
-  /***
    * Method to load the configuration from properties file
    *
    * @param resourceName
@@ -283,26 +196,4 @@ public class WufooProcessor implements Processor {
           resourceName + ".", e);
     }
   }
-
-  /****
-   * Convert fields in HasHmap to JSONArray
-   *
-   * @throws JSONException
-   */
-  public JSONArray convertMaptoJSON(Map<String, String> mp) throws JSONException {
-
-    JSONArray fields = new JSONArray();
-    Iterator<Entry<String, String>> it = mp.entrySet().iterator();
-    while (it.hasNext()) {
-
-      Entry<String, String> pair = it.next();
-
-      JSONObject obj = new JSONObject();
-      obj.put("value", pair.getValue());
-      obj.put("key", pair.getKey());
-      fields.put(obj);
-    }
-    return fields;
-  }
-
 }

@@ -38,23 +38,19 @@ public class ExceptionProcessor implements Processor {
       if (exceptionClass.equalsIgnoreCase(CamelHandShakeException.class.getName())) {
         email_Content.append("Exception: CamelHandShakeException \n");
         email_Content.append("Exception Message: " + exception.getMessage() + " \n");
-        log.info("CamelHandShakeException");
-        exception.printStackTrace();
+        log.error("CamelHandShakeException", exception);
       } else if (exceptionClass.equalsIgnoreCase(FormMappingException.class.getName())) {
         email_Content.append("Exception: FormMappingException \n");
         email_Content.append("Exception Message: " + exception.getMessage() + " \n");
-        log.info("FormMappingException");
-        exception.printStackTrace();
+        log.error("FormMappingException", exception);
       } else if (exceptionClass.equalsIgnoreCase(SysAidConnectorException.class.getName())) {
         email_Content.append("Exception: SysAidConnectorException \n");
         email_Content.append("Exception Message: " + exception.getMessage() + " \n");
-        log.info("SysAidConnectorException");
-        exception.printStackTrace();
+        log.error("SysAidConnectorException", exception);
       } else {
         email_Content.append("Exception: " + exceptionClass + " \n");
         email_Content.append("Exception Message: " + exception.getMessage() + " \n");
-        log.info("Exception:" + exceptionClass);
-        exception.printStackTrace();
+        log.error("Exception", exception);
       }
 
       email_Content.append("\nCamel Message History: \n");
@@ -69,7 +65,7 @@ public class ExceptionProcessor implements Processor {
       exchange.getOut().setBody(email_Content.toString()); // Email Content
 
     } catch (Exception e) {
-      log.error("Exception occured while handling Route's Exception." + e);
+      log.error("Exception occured while handling Route's Exception.", e);
     }
   }
 

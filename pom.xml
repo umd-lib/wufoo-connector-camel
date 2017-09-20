@@ -20,6 +20,7 @@
     <commons-configuration-version>1.10</commons-configuration-version>
     <commons-lang-version>2.6</commons-lang-version>
     <stringtemplate-version>4.0.8</stringtemplate-version>
+    <antlr-runtime-version>3.5.2</antlr-runtime-version>
   </properties>
   
   <distributionManagement>

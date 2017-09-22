@@ -5,7 +5,10 @@
   <feature name="wufoo-connector-camel" version="${project.version}" start-level="50">
     <details>Installs the Wufoo Connector Camel Route</details>
     <bundle>mvn:edu.umd.lib/wufoo-connector-camel/${project.version}</bundle>
+    <feature prerequisite="true">wrap</feature>
     <bundle dependency="true">wrap:mvn:org.json/json/20090211</bundle>
+    <bundle dependency="true">wrap:mvn:org.antlr/ST4/${stringtemplate-version}</bundle>
+    <bundle dependency="true">wrap:mvn:org.antlr/antlr-runtime/${antlr-runtime-version}</bundle>
     <bundle dependency="true">mvn:commons-configuration/commons-configuration/${commons-configuration-version}</bundle>
     <bundle dependency="true">mvn:commons-lang/commons-lang/${commons-lang-version}</bundle>
     <feature version="${camel.version}">camel</feature>

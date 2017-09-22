@@ -183,7 +183,6 @@ public class SysAidConnector {
       st.add(key, args.get(key));
     }
     renderedString = st.render();
-    renderedString = renderedString.replaceAll("<Field[0-9]+>(, )?|(, )?<Field[0-9]+>", "");
     log.debug("Rendered string: " + renderedString);
     return renderedString;
   }

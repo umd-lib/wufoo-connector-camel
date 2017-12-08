@@ -147,9 +147,7 @@ public class SysAidConnector {
       String key = mappingKeys.next();
       String wufooValue = "";
       String sysaidKey = "";
-
-      log.info("Key: " + key);
-
+      
       // mapped_sysaid.cust_list1=Field20
       if (key.startsWith(MAPPED_SYSAID_FIELD_PREFIX)) {
         wufooValue = getMappedValue(key, nonEmptyArgs);

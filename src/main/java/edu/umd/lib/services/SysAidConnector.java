@@ -147,8 +147,7 @@ public class SysAidConnector {
       String key = mappingKeys.next();
       String wufooValue = "";
       String sysaidKey = "";
-      
-      // mapped_sysaid.cust_list1=Field20
+
       if (key.startsWith(MAPPED_SYSAID_FIELD_PREFIX)) {
         wufooValue = getMappedValue(key, nonEmptyArgs);
         sysaidKey = key.substring(MAPPED_SYSAID_FIELD_PREFIX.length());
@@ -161,16 +160,15 @@ public class SysAidConnector {
         sysaidValues.put(sysaidKey, wufooValue);
       }
     }
-    // Return the Mapped SysAid field and Values
     return sysaidValues;
   }
 
   protected String getMappedValue(String key, Map<String, String> args) {
     String wufooKey = configuration.getString(key);
     if (args.containsKey(wufooKey)) {
-      String wufooValue = args.get(wufooKey); //BS
-      String sysaidKey = key.substring(MAPPED_SYSAID_FIELD_PREFIX.length()); // cust_list1
-      List<Object> mappingConfig = configuration.getList(MAPPED_SYSAID_KEY_PREFIX + sysaidKey); // BS|1,FF|2
+      String wufooValue = args.get(wufooKey);
+      String sysaidKey = key.substring(MAPPED_SYSAID_FIELD_PREFIX.length());
+      List<Object> mappingConfig = configuration.getList(MAPPED_SYSAID_KEY_PREFIX + sysaidKey); 
       for(Object listItemObj : mappingConfig){
         String listItem = listItemObj.toString();
        if(listItem.startsWith(wufooValue+"|")){

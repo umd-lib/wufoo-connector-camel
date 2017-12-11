@@ -40,6 +40,8 @@ public class SysAidConnector {
   private final Logger log = Logger.getLogger(SysAidConnector.class);
 
   private final String SYSAID_FIELD_PREFIX = "sysaid.";
+  private final String MAPPED_SYSAID_FIELD_PREFIX = "mapped_sysaid.";
+  private final String MAPPED_SYSAID_KEY_PREFIX = "mapped_sysaid_key.";
 
   private final String sysaid_formID;
   private final String sysaid_accountID;
@@ -143,15 +145,38 @@ public class SysAidConnector {
     Iterator<String> mappingKeys = configuration.getKeys();
     while (mappingKeys.hasNext()) {
       String key = mappingKeys.next();
+      String wufooValue = "";
+      String sysaidKey = "";
+
+      if (key.startsWith(MAPPED_SYSAID_FIELD_PREFIX)) {
+        wufooValue = getMappedValue(key, nonEmptyArgs);
+        sysaidKey = key.substring(MAPPED_SYSAID_FIELD_PREFIX.length());
+      }
       if (key.startsWith(SYSAID_FIELD_PREFIX)) {
-        String wufooValue = renderedTemplate(configuration.getString(key), nonEmptyArgs, blankFields);
-        if (!wufooValue.isEmpty()) {
-          sysaidValues.put(key.substring(SYSAID_FIELD_PREFIX.length()), wufooValue);
-        }
+        wufooValue = renderedTemplate(configuration.getString(key), nonEmptyArgs, blankFields);
+        sysaidKey = key.substring(SYSAID_FIELD_PREFIX.length());
+      }
+      if (wufooValue != null && !wufooValue.isEmpty()) {
+        sysaidValues.put(sysaidKey, wufooValue);
       }
     }
-    // Return the Mapped SysAid field and Values
     return sysaidValues;
+  }
+
+  protected String getMappedValue(String key, Map<String, String> args) {
+    String wufooKey = configuration.getString(key);
+    if (args.containsKey(wufooKey)) {
+      String wufooValue = args.get(wufooKey);
+      String sysaidKey = key.substring(MAPPED_SYSAID_FIELD_PREFIX.length());
+      List<Object> mappingConfig = configuration.getList(MAPPED_SYSAID_KEY_PREFIX + sysaidKey); 
+      for(Object listItemObj : mappingConfig){
+        String listItem = listItemObj.toString();
+       if(listItem.startsWith(wufooValue+"|")){
+         return listItem.substring(wufooValue.length() + 1);
+       }
+      }
+    }
+    return null;
   }
 
   /**

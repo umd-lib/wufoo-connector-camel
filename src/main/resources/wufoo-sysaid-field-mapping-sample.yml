@@ -60,10 +60,17 @@
   template: <Field6>
 
 # Map wufoo Subject field to sysaid title field
+# Note: Using "\" to breaklines will not cause new-line characters to be
+# included in the rendered value. The template value in the below configuration
+# is equivalent to: "Request by <Field4> <Field5>"
 - name: title
-  template: Request by <Field4> <Field5>
+  template: "Request \
+    by \
+    <Field4> \
+    <Field5>"
 
 # Map "Comment or Question" wufoo field to sysaid description field.
+# Note: Using the "|" character to breakline will render as multiline text.
 - name: desc
   template: |
     This is a multiline value

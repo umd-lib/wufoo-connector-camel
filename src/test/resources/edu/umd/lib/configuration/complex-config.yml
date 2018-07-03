@@ -1,0 +1,31 @@
+- name: description
+  template: |
+    Multi line text description
+    with multiple fields 
+    Department: <Fieldx_mapped_as_name>
+    And more description text
+    <one_more_field> and some more
+    plain wufoo fields
+    Email: <Field12>
+    Phone: <Field23>
+  mappedFields:
+    - name: Fieldx_mapped_as_name
+      wufooField: Field1
+      mapping:
+        ssdr: Software Systems Development & Research
+        uss: User Support & Servicess
+    - name: one_more_field
+      wufooField: Field2
+      mapping:
+        McKeldin Library: 12
+        Hornbake Library: 13
+- name: title
+  template: "Departmant: <Field1_expanded>"
+  mappedFields:
+    - name: Field1_expanded
+      wufooField: Field3
+      mapping:
+        ssdr: Software Systems Development & Research
+        uss: User Support & Servicess
+
+    

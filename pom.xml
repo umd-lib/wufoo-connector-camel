@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" 
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
   <modelVersion>4.0.0</modelVersion>
 
@@ -21,19 +22,20 @@
     <commons-lang-version>2.6</commons-lang-version>
     <stringtemplate-version>4.0.8</stringtemplate-version>
     <antlr-runtime-version>3.5.2</antlr-runtime-version>
+    <jackson.version>2.9.6</jackson.version>
   </properties>
-  
+
   <distributionManagement>
-	<repository>
-	  <id>nexus</id>
-	  <name>Releases</name>
-	  <url>https://maven.lib.umd.edu/nexus/content/repositories/releases</url>
-	</repository>
-	<snapshotRepository>
-	  <id>nexus</id>
-	  <name>Snapshots</name>
-	  <url>https://maven.lib.umd.edu/nexus/content/repositories/snapshots</url>
-	</snapshotRepository>
+    <repository>
+      <id>nexus</id>
+      <name>Releases</name>
+      <url>https://maven.lib.umd.edu/nexus/content/repositories/releases</url>
+    </repository>
+    <snapshotRepository>
+      <id>nexus</id>
+      <name>Snapshots</name>
+      <url>https://maven.lib.umd.edu/nexus/content/repositories/snapshots</url>
+    </snapshotRepository>
   </distributionManagement>
 
   <dependencies>
@@ -67,12 +69,12 @@
       <scope>test</scope>
     </dependency>
 
-     <dependency>
+    <dependency>
       <groupId>org.apache.camel</groupId>
       <artifactId>camel-jetty</artifactId>
       <version>${camel.version}</version>
-    <!-- use the same version as your Camel core version -->
-     </dependency>
+      <!-- use the same version as your Camel core version -->
+    </dependency>
 
     <dependency>
       <groupId>org.json</groupId>
@@ -132,9 +134,9 @@
     </dependency>
 
     <dependency>
-        <groupId>org.apache.camel</groupId>
-        <artifactId>camel-mail</artifactId>
-        <version>${camel.version}</version>
+      <groupId>org.apache.camel</groupId>
+      <artifactId>camel-mail</artifactId>
+      <version>${camel.version}</version>
     </dependency>
 
     <dependency>
@@ -155,11 +157,23 @@
       <version>${stringtemplate-version}</version>
     </dependency>
 
+    <dependency>
+      <groupId>com.fasterxml.jackson.dataformat</groupId>
+      <artifactId>jackson-dataformat-yaml</artifactId>
+      <version>${jackson.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>${jackson.version}</version>
+    </dependency>
+
   </dependencies>
 
   <build>
     <defaultGoal>install</defaultGoal>
-    
+
     <!-- Enable filtering to have the version properties in features.xml set by maven. -->
     <resources>
       <resource>
@@ -222,7 +236,7 @@
           </instructions>
         </configuration>
       </plugin>
-      
+
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>build-helper-maven-plugin</artifactId>

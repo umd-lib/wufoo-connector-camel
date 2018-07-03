@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import org.apache.commons.configuration.ConfigurationException;
@@ -22,6 +23,7 @@ import org.apache.log4j.Logger;
 import org.json.JSONException;
 import org.stringtemplate.v4.ST;
 
+import edu.umd.lib.core.FieldsRenderer;
 import edu.umd.lib.exception.FormMappingException;
 import edu.umd.lib.exception.SysAidConnectorException;
 
@@ -49,6 +51,10 @@ public class SysAidConnector {
 
     private PropertiesConfiguration configuration;
 
+    private FieldsRenderer renderer;
+
+    private boolean useYamlConfig = false;
+
     public SysAidConnector(String url, String accountid, String formID) {
         this.sysaid_webformurl = url;
         this.sysaid_accountID = accountid;
@@ -62,15 +68,20 @@ public class SysAidConnector {
      * @param resourceName properties file name
      * @throws FormMappingException
      */
-    public void LoadWufooSysaidMapping(String resource) throws FormMappingException {
-        try {
-            this.configuration = new PropertiesConfiguration();
-            this.configuration.load(new FileInputStream(resource));
-        } catch (IOException | ConfigurationException e) {
+    public void LoadWufooSysaidMapping(String resource, Map<String, String> wufooValues) throws FormMappingException {
+        if (resource.endsWith(".yml") || resource.endsWith(".yaml")) {
+            useYamlConfig = true;
+            this.renderer = new FieldsRenderer(resource, wufooValues);
+        } else {
+            try {
+                this.configuration = new PropertiesConfiguration();
+                this.configuration.load(new FileInputStream(resource));
+            } catch (IOException | ConfigurationException e) {
 
-            log.error("IOException occured in Method : LoadwufooSysaidMapping of Class :SysAidConnector.java"
-                    + "  while attempting access Resource Stream ", e);
-            throw new FormMappingException("Mapping file :" + resource + " Not found.");
+                log.error("IOException occured in Method : LoadwufooSysaidMapping of Class :SysAidConnector.java"
+                        + "  while attempting access Resource Stream ", e);
+                throw new FormMappingException("Mapping file :" + resource + " Not found.");
+            }
         }
     }
 
@@ -85,13 +96,22 @@ public class SysAidConnector {
     public void createServiceRequest(HashMap<String, String> values, String resource)
             throws FormMappingException, SysAidConnectorException {
 
-        this.LoadWufooSysaidMapping(resource);
+        verifyConfiguration();
+
+        this.LoadWufooSysaidMapping(resource, values);
 
         try {
 
             DefaultHttpClient client = new DefaultHttpClient();
-            HashMap<String, String> fieldMappings = fieldMapping(values);
-            List<NameValuePair> fields = extractFields_SysAid(fieldMappings);
+            Map<String, String> fieldMap;
+            if (useYamlConfig) {
+                fieldMap = renderer.getRenderedFields();
+            } else {
+                fieldMap = fieldMapping(values);
+            }
+            fieldMap.put("accountID", sysaid_accountID);
+            fieldMap.put("formID", sysaid_formID);
+            List<NameValuePair> fields = getNameValuePairList(fieldMap);
 
             HttpPost httpPost = new HttpPost(this.sysaid_webformurl);
             httpPost.setEntity(new UrlEncodedFormEntity(fields, "UTF-8"));
@@ -119,14 +139,33 @@ public class SysAidConnector {
 
     }
 
+    private void verifyConfiguration() throws SysAidConnectorException {
+        if (this.sysaid_accountID == null || this.sysaid_accountID.equals("")) {
+            throw new SysAidConnectorException(
+                    "SysAid Account ID information not found. Please verify wufooConnector configuration");
+        }
+        if (this.sysaid_formID == null || this.sysaid_formID.equals("")) {
+            throw new SysAidConnectorException(
+                    "SysAid Form ID information not found. Please verify wufooConnector configuration");
+        }
+        if (this.sysaid_webformurl == null || this.sysaid_webformurl.equals("")) {
+            throw new SysAidConnectorException(
+                    "SysAid Webform url not found. Please verify wufooConnector configuration");
+        }
+    }
+
     /****
      * Mapping WuFoo fields with SysAid fields based on the mapping specified in the
      * mapping configuration and default values configuration.
+     * 
+     * This method exists for backwards compatibility and can be removed after all
+     * `.properties` configuration are migrated to YAML configuration.
      * 
      * @param values
      * @return
      * @throws JSONException
      */
+    @Deprecated
     public HashMap<String, String> fieldMapping(HashMap<String, String> wufooValues) throws JSONException {
 
         HashMap<String, String> sysaidValues = new HashMap<String, String>();
@@ -163,6 +202,9 @@ public class SysAidConnector {
      * the template string prior to the rendering to correctly remove the
      * punctuations associated with those <FieldID> without values.
      * 
+     * This method exists for backwards compatibility and can be removed after all
+     * `.properties` configuration are migrated to YAML configuration.
+     * 
      * @param template    - The template string.
      * @param args        - The parameters to render the template.
      * @param emptyFields - Fields (and associated punctuations) to be stripped from
@@ -170,6 +212,7 @@ public class SysAidConnector {
      * 
      * @return Rendered template string.
      */
+    @Deprecated
     protected String renderedTemplate(String template, Map<String, String> args, List<String> emptyFields) {
         log.debug("Template string: " + template);
         if (!template.contains("<Field")) {
@@ -192,41 +235,16 @@ public class SysAidConnector {
         return renderedString;
     }
 
-    /****
-     * Extract Fields for SysAid web form Format. Constructs a list of parameters
-     * from a Request element. These parameters follow the format used by SysAid to
-     * submit web forms and can be used to create an UrlEncodedFormEntity.
+    /**
+     * Convert a Map to List of NameValuePair
      * 
-     * @param fieldMappings
-     * @return
-     * @throws SysAidConnectorException
+     * @param map - A map with string key and string value
+     * @return list of name value pairs
      */
-    protected List<NameValuePair> extractFields_SysAid(HashMap<String, String> fieldMappings)
-            throws SysAidConnectorException {
-
+    protected List<NameValuePair> getNameValuePairList(Map<String, String> map) throws SysAidConnectorException {
         List<NameValuePair> fields = new ArrayList<NameValuePair>();
-
-        if (this.sysaid_accountID == null || this.sysaid_accountID.equals("")) {
-            throw new SysAidConnectorException(
-                    "SysAid Account ID information not found. Please verify wufooConnector configuration");
-        }
-        if (this.sysaid_formID == null || this.sysaid_formID.equals("")) {
-            throw new SysAidConnectorException(
-                    "SysAid Form ID information not found. Please verify wufooConnector configuration");
-        }
-        if (this.sysaid_webformurl == null || this.sysaid_webformurl.equals("")) {
-            throw new SysAidConnectorException(
-                    "SysAid Webform url not found. Please verify wufooConnector configuration");
-        }
-
-        fields.add(new BasicNameValuePair("accountID", sysaid_accountID));
-        fields.add(new BasicNameValuePair("formID", sysaid_formID));
-
-        for (Map.Entry<String, String> entry : fieldMappings.entrySet()) {
-            fields.add(new BasicNameValuePair(entry.getKey(), entry.getValue()));
-        }
+        map.keySet().forEach(k -> fields.add(new BasicNameValuePair(k, map.get(k))));
         return fields;
-
     }
 
 }

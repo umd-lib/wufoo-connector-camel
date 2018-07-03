@@ -20,8 +20,8 @@ public class FieldsRendererTest extends AbstractTest {
     private FieldsRenderer renderer;
 
     @BeforeEach
-    public void setuWufooValues() {
-        wufooValues = new HashMap();
+    public void setupWufooValues() {
+        wufooValues = new HashMap<String, String>();
         wufooValues.put("Field1", "ssdr");
     }
 

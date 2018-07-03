@@ -7,8 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.CollectionType;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -53,7 +51,7 @@ public class FieldsRenderer {
 	}
 
 	private void renderFields() {
-        renderedFields = new HashMap();
+        renderedFields = new HashMap<String, String>();
         ticketFields.forEach(field -> System.out.println(field.getName()));
         ticketFields.forEach(field -> renderedFields.put(field.getName(), getRenderedValue(field)));
 	}

@@ -1,0 +1,87 @@
+  # See https://docs.google.com/document/d/1sjbCoJF1NR8VyuasqHcjpLBIt8SJQ13O0VMZTIy00xo/edit
+
+# Priority:3-High,4-Normal,5-Low
+- name: selectPriority
+  template: 4
+
+# Urgency:3-High,4-Normal,5-Low
+- name: selectUrgency
+  template: 4
+
+# Status: 1-New,2-Assigned,3-Closed,5-Pending,6-Void,7-User Input needed,
+# 8-Order Placed,10- Item not available,12- Order Shipped from vendor
+- name: status
+  template: 1
+
+# location : 1-035/B0228
+# - name: location 
+#   template: 1
+
+# Sysaid category for the SR
+- name: problem_type
+  template: Public
+
+# Sysaid USMAI Location 1-BSU, 2-CES, 3-CSU, 4-FSU, 5-HS/HSL, 6-LNDL, 7-MS,
+# 8-SMCM, 9-SU, 10-TU, 11-UB, 12-UBLL, 13-UMBC, 14-UMCP, 15-UMES, 16-UMLL, 17-UMUC, 18-Other
+- name: cust_list1
+  template: 14
+
+# Sysaid Admin group
+- name: adminGroup
+  template: Sysadmins-User Services
+
+# Subcategory 
+- name: subcategory
+  template: <Field11_category><Field12_category>
+  mappedFields: 
+    - name: Field11_category
+      wufooField: Field11
+      mapping:
+        key1: val1
+        key2: val2
+        key3: val3
+    - name: Field12_category
+      wufooField: Field12
+      mapping:
+        key4: val1
+        key5: val2
+
+
+# Map wufoo First (firstname) field to Sysaid firstname field
+- name: firstName
+  template: <Field4>
+
+# Map wufoo Last (lastname) field to Sysaid lastname field
+- name: lastName
+  template: <Field5>
+
+# Map wufoo Email field to sysaid email field.
+- name: email
+  template: <Field6>
+
+# Map wufoo Subject field to sysaid title field
+# Note: Using "\" to breaklines will not cause new-line characters to be
+# included in the rendered value. The template value in the below configuration
+# is equivalent to: "Request by <Field4> <Field5>"
+- name: title
+  template: "Request \
+    by \
+    <Field4> \
+    <Field5>"
+
+# Map "Comment or Question" wufoo field to sysaid description field.
+# Note: Using the "|" character to breakline will render as multiline text.
+- name: desc
+  template: |
+    This is a multiline value
+    Name: <Field4> <Field5>
+    Email: <Field6>
+    Problem Type: <Field7>
+    <if(Field8)>More details: <Field8><endif>
+    
+    <if(Field9 ||Field10)>
+    Values: <[Field9,Field10]; separator=", ">
+    <endif>
+    
+    -------------------------------------------------------
+    Ticket created by wufoo form submission.

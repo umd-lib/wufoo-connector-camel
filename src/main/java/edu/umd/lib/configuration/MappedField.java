@@ -8,7 +8,8 @@ public class MappedField {
     private String wufooField;
     private Map<String, String> mapping;
 
-    public MappedField() {}
+    public MappedField() {
+    }
 
     public MappedField(String name, String wufooField, Map<String, String> mapping) {
         this.name = name;
@@ -34,7 +35,7 @@ public class MappedField {
 
     public Map<String, String> getMapping() {
         if (this.mapping == null) {
-            this.mapping = new HashMap<String,String>();
+            this.mapping = new HashMap<String, String>();
         }
         return this.mapping;
     }

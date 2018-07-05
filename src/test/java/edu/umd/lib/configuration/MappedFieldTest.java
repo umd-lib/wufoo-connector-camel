@@ -34,8 +34,7 @@ public class MappedFieldTest extends AbstractTest {
         assertThat(fieldOne.getWufooField(), is("Field1"));
         assertThat(fieldOne.getMapping(), IsMapContaining.hasEntry("ssdr", "Software Systems Development & Research"));
         assertThat(fieldOne.getMapping(), IsMapContaining.hasEntry("uss", "User Support & Servicess"));
-        
-        
+
         MappedField fieldTwo = descriptionField.getMappedFields().get(1);
         assertThat(fieldTwo.getName(), is("one_more_field"));
         assertThat(fieldTwo.getWufooField(), is("Field2"));

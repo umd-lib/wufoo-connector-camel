@@ -8,7 +8,8 @@ public class TicketField {
     private String template;
     List<MappedField> mappedFields;
 
-    public TicketField() {}
+    public TicketField() {
+    }
 
     public TicketField(String name, String template, List<MappedField> mappedFields) {
         this.name = name;

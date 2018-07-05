@@ -36,28 +36,28 @@ public class FieldsRenderer {
         CollectionType type = mapper.getTypeFactory().constructCollectionType(List.class, TicketField.class);
         File configFile = new File(yamlConfigurationFile);
         try {
-			ticketFields = mapper.readValue(configFile, type);
-		} catch (IOException e) {
-			e.printStackTrace();
-			throw new FormMappingException("Exception encountered while processing yaml file: " + configName);
-		}
+            ticketFields = mapper.readValue(configFile, type);
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new FormMappingException("Exception encountered while processing yaml file: " + configName);
+        }
     }
 
-	public Map<String, String> getRenderedFields() {
-		if (this.renderedFields == null) {
+    public Map<String, String> getRenderedFields() {
+        if (this.renderedFields == null) {
             renderFields();
         }
         return this.renderedFields;
-	}
+    }
 
-	private void renderFields() {
+    private void renderFields() {
         renderedFields = new HashMap<String, String>();
         ticketFields.forEach(field -> System.out.println(field.getName()));
         ticketFields.forEach(field -> renderedFields.put(field.getName(), getRenderedValue(field)));
-	}
+    }
 
-	private String getRenderedValue(TicketField field) {
-		log.debug("Template string: " + field.getTemplate());
+    private String getRenderedValue(TicketField field) {
+        log.debug("Template string: " + field.getTemplate());
         String renderedString = "";
         ST st = new ST(field.getTemplate());
         getNonEmptyMap(wufooValues).keySet().forEach(k -> st.add(k, wufooValues.get(k)));
@@ -71,7 +71,7 @@ public class FieldsRenderer {
         log.debug("Rendered string: " + renderedString);
         return renderedString;
     }
-    
+
     private Map<String, String> getNonEmptyMap(Map<String, String> map) {
         return map.entrySet().stream().filter(x -> !x.getValue().isEmpty())
                 .collect(Collectors.toMap(x -> x.getKey(), x -> x.getValue()));

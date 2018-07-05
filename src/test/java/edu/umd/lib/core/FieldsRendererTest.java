@@ -44,13 +44,10 @@ public class FieldsRendererTest extends AbstractTest {
         assertThat(renderedFields, IsMapContaining.hasEntry("mappedField", expected));
 
         // Multiline Rendering
-        expected = "Multi line template\n" +
-            "Value of Field1: ssdr\n";
+        expected = "Multi line template\n" + "Value of Field1: ssdr\n";
         assertThat(renderedFields, IsMapContaining.hasEntry("multilineField", expected));
 
-
     }
-
 
     @Test
     public void testConditionalTemplateFieldWithoutValue() throws FormMappingException {

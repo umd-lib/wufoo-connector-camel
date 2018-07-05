@@ -11,12 +11,14 @@
     <bundle dependency="true">wrap:mvn:org.antlr/antlr-runtime/${antlr-runtime-version}</bundle>
     <bundle dependency="true">mvn:commons-configuration/commons-configuration/${commons-configuration-version}</bundle>
     <bundle dependency="true">mvn:commons-lang/commons-lang/${commons-lang-version}</bundle>
+    <bundle dependency='true'>mvn:com.fasterxml.jackson.core/jackson-databind/${jackson.version}</bundle>
+    <bundle dependency='true'>mvn:com.fasterxml.jackson.dataformat/jackson-dataformat-yaml/${jackson.version}</bundle>
     <feature version="${camel.version}">camel</feature>
     <feature version="${camel.version}">camel-http4</feature>
     <feature version="${camel.version}">camel-jetty</feature>
     <feature version="${camel.version}">camel-mail</feature>
     <feature version="${camel.version}">camel-spring</feature>
     <configfile finalname="/etc/edu.umd.lib.wufooconnectorcamel.cfg">mvn:edu.umd.lib/wufoo-connector-camel/${project.version}/cfg/configuration</configfile>
-    <configfile finalname="/etc/wufoo-sysaid-field-mapping-sample.properties">mvn:edu.umd.lib/wufoo-connector-camel/${project.version}/cfg/field-mapping</configfile>
-    </feature>  
+    <configfile finalname="/etc/wufoo-sysaid-field-mapping-sample.yml">mvn:edu.umd.lib/wufoo-connector-camel/${project.version}/cfg/field-mapping</configfile>
+  </feature>
 </features>

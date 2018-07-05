@@ -1,0 +1,23 @@
+- name: simpleField
+  template: Simple Text
+- name: templatedField
+  template: Templated Text - <Field1>
+- name: mappedField
+  template: Templated Text - <My_mapped_field>
+  mappedFields:
+    - name: My_mapped_field
+      wufooField: Field1
+      mapping:
+        ssdr: Software Systems Development & Research
+        uss: User Support & Services
+- name: multilineField
+  template: |
+    Multi line template
+    Value of Field1: <Field1>
+- name: conditionalTemplateField
+  template: "<if(Field2)>Value of Field2: <Field2><endif>"
+- name: commaSeparatedField
+  template: <[Field1,Field2]; separator=", ">
+- name: brokenSingleLineField
+  template: "<Field1>\
+    <Field2>"

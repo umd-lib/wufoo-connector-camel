@@ -22,7 +22,7 @@
     <commons-lang-version>2.6</commons-lang-version>
     <stringtemplate-version>4.0.8</stringtemplate-version>
     <antlr-runtime-version>3.5.2</antlr-runtime-version>
-    <jackson.version>2.9.6</jackson.version>
+    <jackson.version>2.12.1</jackson.version>
     <jackson-annotations.version>2.9.0</jackson-annotations.version>
     <snakeyaml.version>1.18</snakeyaml.version>
     <junit-version>5.2.0</junit-version>

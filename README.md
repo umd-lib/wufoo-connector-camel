@@ -1,5 +1,9 @@
 Wufoo Connector - Camel Java Router Project
 ===========================================
+
+> [!WARNING]
+> This repository is archived and no longer maintained.
+> 
 Apache Camel is used in integrating Wufoo and SysAid. On Successful completion of Wufoo form, Wufoo/SysAid Connector will create a service request in SysAid with the information received from WuFoo form.
 
 The Integration uses Wufoo's webhook to send request submitted from WuFoo form to apache Camel listener. The Camel Listener receives the information through Camel Jetty Component and transforms the information into JSON format that SysAid requires for creating a service request. Rest API for SysAid is used to connect and create the service request in SysAid.
